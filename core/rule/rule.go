@@ -6,7 +6,6 @@ import (
 	"github.com/xiaolan580230/clhttp-framework/core/clCache"
 	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"github.com/xiaolan580230/clhttp-framework/src/skylang"
-	"net/url"
 	"strings"
 	"sync"
 )
@@ -60,7 +59,7 @@ func AddRule(_rule Rule) {
 	ruleLocker.Lock()
 	defer ruleLocker.Unlock()
 
-	ruleList[_rule.Name] = _rule
+	ruleList[_rule.Request + "_" + _rule.Name] = _rule
 }
 
 
@@ -82,20 +81,11 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	ruleLocker.RLock()
 	defer ruleLocker.RUnlock()
 
-	paramStr := _param.GetStr("p", "")
-	decodeStr := paramStr
-
-	paramList, err := url.ParseQuery(string(decodeStr))
-	if err != nil {
-		skylog.LogErr( "HttpRequest 反序列化失败!!错误:%v", err)
-		return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
-	}
-
 	// 通过AC获取到指定的路由
-	acName := paramList.Get("ac")
+	acName := _param.GetStr("ac", "")
 	ruleinfo, exists := ruleList[_uri + "_" + acName]
 	if !exists {
-		skylog.LogErr( "AC <%v> 不存在!", acName)
+		skylog.LogErr( "AC <%v_%v> 不存在!", _uri, acName)
 		return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
@@ -103,7 +93,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 
 	// 需要登录
 	if ruleinfo.Login {
-		var token = paramList.Get("token")
+		var token = _param.GetStr("token", "")
 		if token == "" {
 			return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "请先登录!", nil)
 		}
@@ -119,7 +109,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	paramsKeys := make([]string, 0)
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
-			value := paramList.Get(pinfo.Name)
+			value := _param.GetStr(pinfo.Name, "")
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {
 					// 严格模式
@@ -153,7 +143,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	if ruleinfo.CacheExpire > 0 {
 		// 根据用户缓存
 		if ruleinfo.CacheType == 2 {
-			paramsKeys = append(paramsKeys, "token=" + paramList.Get("token"))
+			paramsKeys = append(paramsKeys, "token=" + _param.GetStr("token", ""))
 		} else if ruleinfo.CacheType == 1 {
 			// 根据IP缓存
 			paramsKeys = append(paramsKeys, "ip=" + _server.RemoteIP)
