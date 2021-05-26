@@ -8,12 +8,13 @@ import (
 )
 
 // HTTP服务默认使用端口号
-const HTTPServerPort = 80
+const HTTPServerPort = 19999
 
 
 func main() {
 
 	clGlobal.Init("cl.conf")
+
 	rule_list.Init()
 
 	skylog.LogInfo( "正在启动服务，端口: %v", HTTPServerPort)

@@ -1,8 +1,8 @@
 package httpserver
 
 import (
-	"github.com/xiaolan580230/clhttp-framework/core/rule"
 	"fmt"
+	"github.com/xiaolan580230/clhttp-framework/core/rule"
 	"log"
 	"net/http"
 	"strings"
