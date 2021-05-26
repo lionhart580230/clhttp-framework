@@ -1,4 +1,4 @@
-module clhttp-framework
+module github.com/xiaolan580230/clhttp-framework
 
 go 1.12
 
