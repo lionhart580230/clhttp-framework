@@ -1,10 +1,10 @@
 package clGlobal
 
 import (
-	"clhttp-framework/core/clmysql"
-	"clhttp-framework/core/skyconfig"
-	"clhttp-framework/core/skylog"
-	"clhttp-framework/core/skyredis"
+	"github.com/xiaolan580230/clhttp-framework/core/clmysql"
+	"github.com/xiaolan580230/clhttp-framework/core/skyconfig"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
+	"github.com/xiaolan580230/clhttp-framework/core/skyredis"
 
 )
 

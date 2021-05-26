@@ -2,7 +2,7 @@ package cljson
 
 import (
 	"bytes"
-	"clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"fmt"
 	"github.com/json-iterator/go"
 	"reflect"

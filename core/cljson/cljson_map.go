@@ -1,7 +1,7 @@
 package cljson
 
 import (
-	"clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"regexp"
 	"strings"
 )
