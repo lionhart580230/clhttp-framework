@@ -43,10 +43,10 @@ func Init(_filename string) {
 	conf.GetStr("mongodb", "mgo_user", "", &SkyConf.MgoUser)
 	conf.GetStr("mongodb", "mgo_pass", "", &SkyConf.MgoPass)
 
-	conf.GetStr("mysql", "mysql_host", "", &SkyConf.MgoUrl)
-	conf.GetStr("mysql", "mysql_name", "", &SkyConf.MgoDBName)
-	conf.GetStr("mysql", "mysql_user", "", &SkyConf.MgoUser)
-	conf.GetStr("mysql", "mysql_pass", "", &SkyConf.MgoPass)
+	conf.GetStr("mysql", "mysql_host", "", &SkyConf.MysqlHost)
+	conf.GetStr("mysql", "mysql_name", "", &SkyConf.MysqlName)
+	conf.GetStr("mysql", "mysql_user", "", &SkyConf.MysqlUser)
+	conf.GetStr("mysql", "mysql_pass", "", &SkyConf.MysqlPass)
 
 	conf.GetStr("redis", "redis_host", "", &SkyConf.RedisHost)
 	conf.GetStr("redis", "redis_prefix", "", &SkyConf.RedisPrefix)
