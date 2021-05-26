@@ -1,8 +1,8 @@
 package clmysql
 
 import (
-	"clhttp-framework/clCommon"
-	"clhttp-framework/core/cltime"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/core/cltime"
 	"strings"
 )
 

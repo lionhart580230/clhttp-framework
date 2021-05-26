@@ -1,7 +1,7 @@
 package clGlobal
 
 import (
-	"clhttp-framework/core/skylog"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"sync"
 )
 

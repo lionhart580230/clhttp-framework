@@ -1,8 +1,8 @@
 package rule_list
 
 import (
-	"clhttp-framework/clController/example"
-	"clhttp-framework/core/rule"
+	"github.com/xiaolan580230/clhttp-framework/clController/example"
+	"github.com/xiaolan580230/clhttp-framework/core/rule"
 )
 
 func Init() {

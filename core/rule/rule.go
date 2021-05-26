@@ -1,11 +1,11 @@
 package rule
 
 import (
-	"clhttp-framework/clCommon"
-	"clhttp-framework/core/clAuth"
-	"clhttp-framework/core/clCache"
-	"clhttp-framework/core/skylog"
-	"clhttp-framework/src/skylang"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
+	"github.com/xiaolan580230/clhttp-framework/core/clCache"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
+	"github.com/xiaolan580230/clhttp-framework/src/skylang"
 	"net/url"
 	"strings"
 	"sync"

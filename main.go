@@ -1,10 +1,10 @@
 package main
 
 import (
-	"clhttp-framework/clGlobal"
-	"clhttp-framework/core/httpserver"
-	"clhttp-framework/core/skylog"
-	"clhttp-framework/src/rule_list"
+	"github.com/xiaolan580230/clhttp-framework/clGlobal"
+	"github.com/xiaolan580230/clhttp-framework/core/httpserver"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
+	"github.com/xiaolan580230/clhttp-framework/src/rule_list"
 )
 
 // HTTP服务默认使用端口号

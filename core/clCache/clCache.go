@@ -1,8 +1,8 @@
 package clCache
 
 import (
-	"clhttp-framework/clCommon"
-	"clhttp-framework/core/cljson"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/core/cljson"
 	"sync"
 	"time"
 )
