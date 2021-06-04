@@ -13,16 +13,16 @@ import (
 
 
 type ServerParam struct {
-	RemoteIP   string
-	RequestURI string
-	Host       string
-	Method     string
-	RequestURL string
-	UA         string
-	UAType     uint32
-	Proctol    string
-	Port       string
-	Language   string
+	RemoteIP   string			// 远程IP地址
+	RequestURI string			// 请求URI
+	Host       string			// 请求域名
+	Method     string			// 请求方法
+	RequestURL string			// 请求完整地址
+	UA         string			// 目标设备信息
+	UAType     uint32			// 目标设备类型
+	Proctol    string			// 目标协议
+	Port       string			// 端口
+	Language   string			// 使用语言信息
 }
 
 
