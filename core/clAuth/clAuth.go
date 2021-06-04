@@ -1,6 +1,9 @@
 package clAuth
 
 import (
+	"encoding/json"
+	"github.com/xiaolan580230/clhttp-framework/clCrypt"
+	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"sync"
 	"time"
 )
@@ -44,7 +47,29 @@ func AddUser( _auth *AuthInfo) {
 
 	_auth.LastUptime = uint32(time.Now().Unix())
 
+	if clGlobal.SkyConf.IsCluster {
+		SaveUser(_auth)
+		return
+	}
+
 	mAuthMap[_auth.Token] = _auth
+}
+
+
+// 保存用户信息到数据库
+func SaveUser(_auth *AuthInfo) {
+	if !clGlobal.SkyConf.IsCluster {
+		return
+	}
+
+	redis := clGlobal.GetRedis()
+	if redis != nil {
+		var userData, err = json.Marshal(_auth)
+		if err != nil {
+			return
+		}
+		redis.Set(_auth.Token, clCrypt.Base64Encode(string(userData)), 3600)
+	}
 }
 
 
@@ -52,6 +77,15 @@ func AddUser( _auth *AuthInfo) {
 func DelUser( _auth *AuthInfo) {
 	mLocker.Lock()
 	defer mLocker.Unlock()
+
+	if clGlobal.SkyConf.IsCluster {
+		redis := clGlobal.GetRedis()
+		if redis != nil {
+			redis.Del(_auth.Token)
+		}
+		return
+	}
+
 
 	delete(mAuthMap, _auth.Token )
 }
@@ -61,6 +95,25 @@ func DelUser( _auth *AuthInfo) {
 func GetUser( _token string ) *AuthInfo {
 	mLocker.RLock()
 	defer mLocker.RUnlock()
+
+	if clGlobal.SkyConf.IsCluster {
+		redis := clGlobal.GetRedis()
+		if redis != nil {
+			var userCache = redis.Get(_token)
+			if userCache == "" {
+				return nil
+			}
+
+			var userObj AuthInfo
+			err := json.Unmarshal(clCrypt.Base64Decode(userCache), &userObj)
+			if err != nil {
+				return nil
+			}
+
+			return &userObj
+		}
+		return nil
+	}
 
 	return mAuthMap[_token]
 }
@@ -72,6 +125,8 @@ func (this *AuthInfo) SetItem(_key string, _val string) {
 	defer mLocker.Unlock()
 
 	this.extraData[_key] = _val
+
+	SaveUser(this)
 }
 
 
@@ -85,8 +140,18 @@ func (this *AuthInfo) GetItem(_key string) string {
 
 
 // 设置登录
-func (this *AuthInfo) SetLogin(_login bool) {
-	this.IsLogin = _login
+// 如果设置为登录中状态则 uid必须>0
+// 如果没有则自动切换为离线状态
+func (this *AuthInfo) SetLogin(_uid uint64) {
+	if _uid > 0 {
+		this.IsLogin = true
+		this.Uid = _uid
+	} else {
+		this.IsLogin = false
+		this.Uid = 0
+	}
+
+	SaveUser(this)
 }
 
 

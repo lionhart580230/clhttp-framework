@@ -27,6 +27,8 @@ type SkyConfig struct {
 
 	LogType  uint32
 	LogLevel uint32
+
+	IsCluster bool
 }
 
 var SkyConf SkyConfig
@@ -56,7 +58,7 @@ func Init(_filename string) {
 	conf.GetUint32("system", "log_level", skylog.LOG_LEVEL_ALL, &SkyConf.LogLevel)
 
 	conf.GetStr("system", "version", "", &ServerVersion)
-
+	conf.GetBool("system", "is_cluster", false, &SkyConf.IsCluster)
 	skylog.New(ServerVersion)
 
 	skylog.LogDebug("%+v", SkyConf)
@@ -93,6 +95,7 @@ func GetMysql() *clmysql.DBPointer {
 	mMysql = db
 	return mMysql
 }
+
 
 // 获取mongodb连线
 func GetMongo() {

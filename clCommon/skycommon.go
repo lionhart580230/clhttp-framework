@@ -2,7 +2,6 @@ package clCommon
 
 import (
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -236,17 +235,3 @@ func GenUserUid() uint64 {
 }
 
 
-// base64
-func Base64Encode(str string) string {
-	return base64.StdEncoding.EncodeToString([]byte(str))
-}
-
-// base64
-func Base64Decode(str string) []byte {
-	res, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		fmt.Printf("base64 decode failed: %v", err)
-		return []byte{}
-	}
-	return res
-}
