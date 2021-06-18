@@ -1,19 +1,22 @@
 package skyredis
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestNew(t *testing.T) {
-	rd, err := New("r-j6ckhdr61vu28fn4bzpd.redis.rds.aliyuncs.com:6379","MyInstance001", "")
-	if err != nil {
-		fmt.Printf(">> connect To redis error: %v\n", err)
-		return
+	//rd, _ := New("localhost:6379","MyInstance001", "")
+	//if err != nil {
+	//	fmt.Printf(">> connect To redis error: %v\n", err)
+	//	return
+	//}
+
+	clrd := &RedisObject{
+		myredis:   nil,
+		prefix:    "",
+		isCluster: false,
 	}
+	//fmt.Printf(">> connect to redis success!!")
 
-
-	fmt.Printf(">> connect to redis success!!")
-
-	rd.Set("key1", "hello", 600)
+	clrd.Set("key1", "hello", 600)
 }
