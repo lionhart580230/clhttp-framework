@@ -359,8 +359,15 @@ func checkRedisValid(_keys string, targetData *redis.StringCmd) string {
 
 // 组装缓存的值
 func buildRedisValue(_keys string, expire uint32, data interface{}) string {
+	var cache_data []byte
+	var err error
+	if _, ok := data.(string); ok {
+		cache_data = []byte(data.(string))
+	} else {
+		cache_data, err = json.Marshal(data)
+	}
 
-	cache_data, err := json.Marshal(data)
+
 	if err != nil {
 		return ""
 	}
