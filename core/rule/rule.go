@@ -89,7 +89,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
-	var authInfo *clAuth.AuthInfo
+	var authInfo  = &clAuth.AuthInfo{}
 
 	// 需要登录
 	if ruleinfo.Login {
