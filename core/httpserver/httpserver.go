@@ -23,6 +23,12 @@ func StartServer(_listenPort uint32) {
 //@lastUpdate 2019-08-09
 //@comment http请求主入口回调
 func rootHandler(rw http.ResponseWriter, rq *http.Request) {
+
+	// 跨域支持
+	origin := rq.Header.Get("Origin")
+	rw.Header().Set("Access-Control-Allow-Origin", origin)
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	// 需要过滤的请求文件类型列表
 	filter_file_ext := []string{
 		".ico", ".png", ".jpg", ".gif", ".js", ".css", ".html",
