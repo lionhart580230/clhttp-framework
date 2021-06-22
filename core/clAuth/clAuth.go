@@ -142,16 +142,15 @@ func (this *AuthInfo) GetItem(_key string) string {
 // 设置登录
 // 如果设置为登录中状态则 uid必须>0
 // 如果没有则自动切换为离线状态
-func (this *AuthInfo) SetLogin(_uid uint64) {
-	if _uid > 0 {
+func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
+	if _uid > 0 && _token != "" {
 		this.IsLogin = true
 		this.Uid = _uid
+		this.Token = _token
+		AddUser(this)
 	} else {
-		this.IsLogin = false
-		this.Uid = 0
+		DelUser(this)
 	}
-
-	SaveUser(this)
 }
 
 
