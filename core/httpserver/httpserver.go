@@ -98,27 +98,30 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		remotes := strings.Split(remoteip, ",")
 		remoteip = remotes[0]
 	}
+	fmt.Printf("%v\n", remoteip)
 
 	request_url := ""
 	proctol := rq.Header.Get("Proxy-X-Forwarded-Proto")
 	if proctol == "" {
 		proctol = rq.Header.Get("X-Forwarded-Proto")
 	}
-	port := rq.Header.Get("X-Forwarded-Port")
-	if proctol == "https" {
-		request_url = "https://" + rq.Host
-		if port != "443" {
-			request_url += ":" + rq.Header.Get("X-Forwarded-Port")
-		}
-		request_url += rq.RequestURI
-		proctol = "https"
-	} else {
-		request_url = "http://" + rq.Host
-		if port != "80" {
-			request_url += ":" + rq.Header.Get("X-Forwarded-Port")
-		}
-		request_url += rq.RequestURI
-	}
+
+	request_url = "https://" + rq.Host + rq.RequestURI
+	//port := rq.Header.Get("X-Forwarded-Port")
+	//if proctol == "https" {
+	//	request_url = "https://" + rq.Host
+	//	if port != "443" {
+	//		request_url += ":" + rq.Header.Get("X-Forwarded-Port")
+	//	}
+	//	request_url += rq.RequestURI
+	//	proctol = "https"
+	//} else {
+	//	request_url = "http://" + rq.Host
+	//	if port != "80" {
+	//		request_url += ":" + rq.Header.Get("X-Forwarded-Port")
+	//	}
+	//	request_url += rq.RequestURI
+	//}
 
 	myUA := rq.Header.Get("platform")
 	if myUA == "" {
@@ -129,6 +132,9 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	if myLang == "" {
 		myLang = "zhcn_simple"
 	}
+	if strings.HasPrefix(remoteip, "[::1]") {
+		remoteip = strings.ReplaceAll(remoteip, "[::1]", "127.0.0.1")
+	}
 	var serObj = rule.ServerParam{
 		RemoteIP:   strings.Split(remoteip, ":")[0],
 		RequestURI: rq.RequestURI,
@@ -138,7 +144,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		UA:         myUA,
 		UAType:     UAToInt(myUA),
 		Proctol:    proctol,
-		Port:       port,
 		Language:   myLang,
 	}
 	content, contentType := CallHandler(request_name, rqObj, &serObj)
