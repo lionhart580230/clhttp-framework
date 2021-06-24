@@ -8,5 +8,5 @@ import (
 
 func ApiExample(_auth *clAuth.AuthInfo, _param *rule.HttpParam, _server *rule.ServerParam) string {
 
-	return clCommon.JCode(0, "ok", nil)
+	return clCommon.JCode(0, "ok", _server)
 }
