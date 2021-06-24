@@ -25,9 +25,8 @@ func StartServer(_listenPort uint32) {
 func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 
 	// 跨域支持
-	origin := rq.Header.Get("Origin")
-	rw.Header().Set("Access-Control-Allow-Origin", origin)
-	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
+	rw.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
 
 	// 需要过滤的请求文件类型列表
 	filter_file_ext := []string{
