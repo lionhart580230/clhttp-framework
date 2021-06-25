@@ -89,19 +89,16 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
-	var authInfo  = &clAuth.AuthInfo{}
+	var token = _param.GetStr("token", "")
+	var authInfo = clAuth.GetUser(token)
 
 	// 需要登录
 	if ruleinfo.Login {
-		var token = _param.GetStr("token", "")
-		if token == "" {
-			return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "请先登录!", nil)
-		}
-
-		authInfo = clAuth.GetUser(token)
 		if authInfo == nil || !authInfo.IsLogin {
 			return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "请先登录!", nil)
 		}
+	} else {
+		authInfo = clAuth.NewUser(0, "")
 	}
 
 	// 检查参数
