@@ -97,8 +97,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		remotes := strings.Split(remoteip, ",")
 		remoteip = remotes[0]
 	}
-	fmt.Printf("%v\n", remoteip)
-
 	request_url := ""
 	proctol := rq.Header.Get("Proxy-X-Forwarded-Proto")
 	if proctol == "" {
