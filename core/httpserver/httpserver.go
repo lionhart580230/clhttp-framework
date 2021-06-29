@@ -68,6 +68,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		}
 	} else {
 		rq.ParseForm()
+		fmt.Printf("Form: %+v\n", rq.Form)
 		if len(rq.Form) > 0 {
 			for key, val := range rq.Form {
 				if len(val) == 1 {
@@ -104,21 +105,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	}
 
 	request_url = "https://" + rq.Host + rq.RequestURI
-	//port := rq.Header.Get("X-Forwarded-Port")
-	//if proctol == "https" {
-	//	request_url = "https://" + rq.Host
-	//	if port != "443" {
-	//		request_url += ":" + rq.Header.Get("X-Forwarded-Port")
-	//	}
-	//	request_url += rq.RequestURI
-	//	proctol = "https"
-	//} else {
-	//	request_url = "http://" + rq.Host
-	//	if port != "80" {
-	//		request_url += ":" + rq.Header.Get("X-Forwarded-Port")
-	//	}
-	//	request_url += rq.RequestURI
-	//}
 
 	myUA := rq.Header.Get("platform")
 	if myUA == "" {

@@ -12,7 +12,7 @@ func Init() {
 		Request: "request",
 		Name: "api_example",
 		Params: []rule.ParamInfo{
-			rule.NewParam("user", rule.PTYPE_SAFE_STR, true, ""),
+			rule.NewParam("user", rule.PTYPE_ALL, true, ""),
 		},
 		CallBack: example.ApiExample,
 	})

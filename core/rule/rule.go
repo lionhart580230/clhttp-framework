@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
 	"github.com/xiaolan580230/clhttp-framework/core/clCache"
@@ -107,6 +108,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
 			value := _param.GetStr(pinfo.Name, "")
+			fmt.Printf("%v => %v\n", pinfo.Name, value)
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {
 					// 严格模式

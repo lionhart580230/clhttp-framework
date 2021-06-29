@@ -3,7 +3,6 @@ package clCommon
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -186,23 +185,6 @@ func Bool(ceil string) bool {
 	return false
 }
 
-
-type SkyResp struct {
-	Code uint32 `json:"code"`
-	Msg string `json:"msg"`
-	Data interface{} `json:"data"`
-}
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 回传结果
-func JCode(_code uint32, _msg string, _data interface{}) string {
-	resp, _ := json.Marshal(SkyResp{
-		Code: _code,
-		Msg: _msg,
-		Data: _data,
-	})
-	return string(resp)
-}
 
 
 //@author xiaolan
