@@ -3,6 +3,7 @@ package rule
 import (
 	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/clResponse"
 	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
 	"github.com/xiaolan580230/clhttp-framework/core/clCache"
 	"github.com/xiaolan580230/clhttp-framework/core/skylog"
@@ -87,7 +88,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	ruleinfo, exists := ruleList[_uri + "_" + acName]
 	if !exists {
 		skylog.LogErr( "AC <%v_%v> 不存在!", _uri, acName)
-		return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
+		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
 	var token = _param.GetStr("token", "")
@@ -96,7 +97,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	// 需要登录
 	if ruleinfo.Login {
 		if authInfo == nil || !authInfo.IsLogin {
-			return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "请先登录!", nil)
+			return clResponse.NotLogin()
 		}
 	} else {
 		authInfo = clAuth.NewUser(0, "")
@@ -112,7 +113,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {
 					// 严格模式
-					return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name)
+					return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name)
 				} else {
 					value = pinfo.Default
 				}
@@ -120,7 +121,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 				if !pinfo.CheckParam(value) {
 					if pinfo.Static {
 						// 严格模式
-						return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name)
+						return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name)
 					} else {
 						value = pinfo.Default
 					}
@@ -134,7 +135,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	// 如果回调函数不存在
 	if ruleinfo.CallBack == nil {
 		skylog.LogErr("AC[%v]回调函数为空!", acName)
-		return clCommon.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
+		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
 	// 检查是否需要缓存
@@ -163,6 +164,5 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	}
 
 	skylog.LogDebug("[ACK][%s] %s", _server.RemoteIP, respStr)
-
 	return respStr
 }
