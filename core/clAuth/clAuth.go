@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
+	"github.com/xiaolan580230/clhttp-framework/core/skyredis"
 	"sync"
 	"time"
 )
@@ -15,7 +17,7 @@ type AuthInfo struct {
 	Token string				// 用户Token数据
 	LastUptime uint32			// 最近活跃时间
 	IsLogin bool				// 是否登录
-	extraData map[string]string	// 附属数据
+	ExtraData map[string]string	// 附属数据
 	mLocker sync.RWMutex		// 异步锁
 }
 
@@ -35,7 +37,7 @@ func NewUser(_uid uint64, _token string ) *AuthInfo {
 		Token:      _token,
 		LastUptime: 0,
 		IsLogin:    false,
-		extraData:  make(map[string] string),
+		ExtraData:  make(map[string] string),
 	}
 }
 
@@ -56,6 +58,30 @@ func AddUser( _auth *AuthInfo) {
 }
 
 
+// 加载所有用户数据
+func LoadUsers() {
+	mLocker.Lock()
+	defer mLocker.Unlock()
+
+	mAuthMap = make(map[string] *AuthInfo)
+
+	redis := clGlobal.GetRedis()
+
+	keys := redis.GetKeys("U_INFO_*")
+	for _, ukey := range keys {
+		var data AuthInfo
+		var jsonStr = clCrypt.Base64Decode(redis.Get(ukey))
+		var err = json.Unmarshal(jsonStr, &data)
+		if err != nil {
+			skylog.LogErr("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
+			continue
+		}
+		skylog.LogInfo("成功加载用户: %v -> %v", data.Token, data.Uid)
+		mAuthMap[ data.Token ] = &data
+	}
+}
+
+
 // 保存用户信息到数据库
 func SaveUser(_auth *AuthInfo) {
 	if !clGlobal.SkyConf.IsCluster {
@@ -68,7 +94,7 @@ func SaveUser(_auth *AuthInfo) {
 		if err != nil {
 			return
 		}
-		redis.Set(_auth.Token, clCrypt.Base64Encode(string(userData)), 3600)
+		redis.Set("U_INFO_" + _auth.Token, clCrypt.Base64Encode(string(userData)), 3600)
 	}
 }
 
@@ -85,9 +111,7 @@ func DelUser( _auth *AuthInfo) {
 		}
 		return
 	}
-
-
-	delete(mAuthMap, _auth.Token )
+	delete(mAuthMap, _auth.Token)
 }
 
 
@@ -99,17 +123,16 @@ func GetUser( _token string ) *AuthInfo {
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			var userCache = redis.Get(_token)
+			var userCache = redis.Get("U_INFO_" + _token)
 			if userCache == "" {
 				return nil
 			}
-
 			var userObj AuthInfo
 			err := json.Unmarshal(clCrypt.Base64Decode(userCache), &userObj)
 			if err != nil {
 				return nil
 			}
-
+			skylog.LogDebug("获取用户:%v 数据:%+v", _token, userObj)
 			return &userObj
 		}
 		return nil
@@ -119,24 +142,6 @@ func GetUser( _token string ) *AuthInfo {
 }
 
 
-// 设置信息
-func (this *AuthInfo) SetItem(_key string, _val string) {
-	mLocker.Lock()
-	defer mLocker.Unlock()
-
-	this.extraData[_key] = _val
-
-	SaveUser(this)
-}
-
-
-// 获取信息
-func (this *AuthInfo) GetItem(_key string) string {
-	mLocker.RLock()
-	defer mLocker.RUnlock()
-
-	return this.extraData[_key]
-}
 
 
 // 设置登录
@@ -148,8 +153,31 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 		this.Uid = _uid
 		this.Token = _token
 		AddUser(this)
+
+		// 清理内存
+		ClearUserData(_uid)
 	} else {
 		DelUser(this)
+	}
+}
+
+
+// 清理内存 (如果内存中或redis中存在这个uid的数据，则自动清理)
+func ClearUserData(_uid uint64) {
+	mLocker.Lock()
+	defer mLocker.Unlock()
+
+	var redis *skyredis.RedisObject
+	if clGlobal.SkyConf.IsCluster {
+		redis = clGlobal.GetRedis()
+	}
+	for _, val := range mAuthMap {
+		if val.Uid == _uid {
+			delete(mAuthMap, val.Token)
+			if redis != nil {
+				redis.Del("U_INFO_" + val.Token)
+			}
+		}
 	}
 }
 

@@ -1,37 +1,46 @@
 package skyredis
 
 import (
-	"github.com/xiaolan580230/clhttp-framework/clCommon"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
-	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/core/cljson"
 	"strings"
+	"sync"
 	"time"
 )
 
 type RedisObject struct {
-	myredis   *redis.Client
-	prefix    string
+	myredis *redis.Client
+	prefix string
 	isCluster bool
 }
 
-type RedisCacheInfo struct {
-	Data   string `json:"data"`
-	Expire uint32 `json:"expire"`
-	Sign   string `json:"sign"`
+var RedisPool map[string] *RedisObject
+var Locker sync.RWMutex
+func init() {
+	RedisPool = make(map[string] *RedisObject)
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 创建一个新的redis对象
-func New(_addr string, _password string, _prefix string) (*RedisObject, error) {
+func New(addr, _password, _webSite string) (*RedisObject, error) {
+
+	Locker.Lock()
+	defer Locker.Unlock()
+
+	val, find := RedisPool[addr + _webSite]
+	if find {
+		redisPing := val.myredis.Ping()
+		if redisPing.Err() == nil {
+			return val, nil
+		}
+		delete(RedisPool, addr + _webSite)
+	}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:        _addr,
-		PoolSize:    10,
+		Addr: addr,
+		Password: _password,
+		PoolSize: 10,
 		PoolTimeout: 30 * time.Second,
-		Password:    _password,
 	})
 
 	_, err := client.Ping().Result()
@@ -40,65 +49,65 @@ func New(_addr string, _password string, _prefix string) (*RedisObject, error) {
 	}
 
 	clrd := &RedisObject{
-		myredis:   client,
-		prefix:    _prefix,
-		isCluster: false,
+		myredis: client,
+		prefix: _webSite,
+		isCluster:false,
 	}
 
+	RedisPool[addr + _webSite] = clrd
 	return clrd, nil
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 关闭redis连线
-func (this *RedisObject) Close() {
+
+// 连线关闭
+func (this *RedisObject)Close() {
 
 	if this.myredis != nil {
-		this.myredis.Close()
+		_ = this.myredis.Close()
 	}
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 删除一个key
-//@param _key key的名称
-func (this *RedisObject) Del(_key string) error {
 
-	keys := _key
+// 测试连线
+func (this *RedisObject) Ping() bool {
+	redisPing := this.myredis.Ping()
+	if redisPing.Err() == nil {
+		return true
+	}
+	return false
+}
+
+// 删除
+func (this *RedisObject) Del(key string) error {
+
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
 
 	i := this.myredis.Del(keys)
 	return i.Err()
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 设置一个key
-//@param _key key的名字
-//@param _val key对应的值
-//@param _expire 有效期
-func (this *RedisObject) Set(_key string, _val interface{}, _expire int32) error {
+// 设置
+func (this *RedisObject) Set(key string, val interface{}, expire int32) error {
 
-	keys := _key
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
-	err := this.myredis.Set(keys, buildRedisValue(keys, uint32(_expire), _val),
-		time.Duration(time.Second*time.Duration(_expire))).Err()
+	err := this.myredis.Set(keys, buildRedisValue(keys, uint32(expire), val),
+		time.Duration(time.Second * time.Duration(expire))).Err()
 	return err
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 获取一个key的值
-//@param _key 需要获取的值
-func (this *RedisObject) Get(_key string) string {
 
-	keys := _key
+// 获取指定的值
+func (this *RedisObject)Get(key string) string {
+
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
 	resp := this.myredis.Get(keys)
 	result := checkRedisValid(keys, resp)
@@ -108,60 +117,51 @@ func (this *RedisObject) Get(_key string) string {
 	return result
 }
 
-// 设置的key不会过期
-func (this *RedisObject) SetNoExpire(_key string, _val interface{}) error {
+// 获取指定的值 多語言用 允許空直不刪除
+func (this *RedisObject)GetLang(key string) string {
 
-	keys := _key
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
-	cmd := this.myredis.Set(keys, _val, 0)
-	return cmd.Err()
+	resp := this.myredis.Get(keys)
+	result := checkRedisValid(keys, resp)
+	return result
 }
 
-// 获取永不过期的key
-func (this *RedisObject) GetNoExpire(_key string) (result string) {
 
-	keys := _key
-	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
-	}
-	result = this.myredis.Get(keys).Val()
+func (this *RedisObject) GetNoPrefix(key string) string {
+
+	keys := key
+	resp := this.myredis.Get(keys)
+	result := checkRedisValid(keys, resp)
 	if result == "" {
 		this.myredis.Del(keys)
-	}
-	return
-}
-
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 获取没有前缀的key
-//@param _key 获取的key名称
-func (this *RedisObject) GetNoPrefix(_key string) string {
-
-	resp := this.myredis.Get(_key)
-	result := checkRedisValid(_key, resp)
-	if result == "" {
-		this.myredis.Del(_key)
 	}
 	return result
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 设置一个hash结构
-//@param _key 设置的key
-//@param _field 设置的key的字段
-//@param _value 设置的值
-//@param _expire 有效期
-func (this *RedisObject) HSet(_key string, _field string, _value interface{}, _expire uint32) bool {
 
-	keys := _key
+// 获取指定的json结构
+func (this *RedisObject)GetJson(key string) *cljson.JsonStream {
+
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
-	value := buildRedisValue(keys+_field, _expire, _value)
-	rest := this.myredis.HSet(keys, _field, value)
+	obj := this.myredis.Get(keys)
+	return cljson.New([]byte(checkRedisValid(keys, obj)))
+}
+
+// 设置hash结构
+func (this *RedisObject)HSet(key string, field string, value interface{}, expire uint32) bool {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+	value = buildRedisValue(keys+field, expire, value)
+	rest := this.myredis.HSet(keys, field, value)
 	if rest == nil {
 		return false
 	}
@@ -173,51 +173,90 @@ func (this *RedisObject) HSet(_key string, _field string, _value interface{}, _e
 	return true
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 获取一个hash结构的值
-//@param _key 获取hash结构的key
-//@param _field 获取hash结构的key的字段
-func (this *RedisObject) HGet(_key string, _field string) string {
 
-	keys := _key
+// 设置hash结构
+func (this *RedisObject)SetEx(key string, value interface{}, expire uint32) bool {
+
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
+	}
+	value = buildRedisValue(keys, expire, value)
+	rest := this.myredis.HSet(keys, "test", value)
+	if rest == nil {
+		return false
 	}
 
-	resp := this.myredis.HGet(keys, _field)
-	result := checkRedisValid(keys+_field, resp)
+	ok, err := rest.Result()
+	if !ok || err != nil{
+		return false
+	}
+	return true
+}
+
+// 设置hash结构的值(保存为json)
+func (this *RedisObject)HSetJson(key string, field string, value interface{}, expire uint32) bool {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+	value = buildRedisValue(keys+field, expire, value)
+	rest := this.myredis.HSet(keys, field, value)
+
+	if rest == nil {
+		return false
+	}
+
+	return rest.Val()
+}
+
+// 获取hash结构
+func (this *RedisObject)HGet(key string, field string) string {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+	resp := this.myredis.HGet(keys, field)
+	result := checkRedisValid(keys + field, resp)
 	if result == "" {
-		this.myredis.HDel(keys, _field)
+		this.myredis.HDel(keys, field)
 	}
 	return result
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 获取删除一个hash结构
-//@param _key 获取hash结构的key
-//@param _field 获取hash结构的字段
-func (this *RedisObject) HDel(_key string, _field string) bool {
+func (this *RedisObject)HDel(key string, field string) bool {
 
-	keys := _key
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
-	resp := this.myredis.HDel(keys, _field)
+	resp := this.myredis.HDel(keys, field)
 	return resp.Val() > 0
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 获取全部的key
-//@param _key 获取的key名称
-//@param _prefix 获取的前缀
-func (this *RedisObject) HGetKeys(_key string, _prefix string) []string {
+// 获取hash结构的值
+func (this *RedisObject)HGetJson(key string, field string) *cljson.JsonStream {
 
-	keys := _key
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
+	}
+	val := this.myredis.HGet(keys, field)
+	res := checkRedisValid(keys + field, val)
+	if res == "" {
+		return nil
+	}
+	return cljson.New([]byte(res))
+}
+
+// 获取全部的key
+func (this *RedisObject)HGetKeys(key string, prefix string) []string {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
 	}
 
 	val := this.myredis.HKeys(keys)
@@ -226,186 +265,242 @@ func (this *RedisObject) HGetKeys(_key string, _prefix string) []string {
 	}
 	resp := make([]string, 0)
 	for _, val := range val.Val() {
-		if strings.HasPrefix(val, _prefix) {
+		if strings.HasPrefix(val, prefix) {
 			resp = append(resp, val)
 		}
 	}
 	return resp
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 删除指定开头的keys
-//@param _key 删除的key
-//@param _prefix 需要删除的key的前缀
-func (this *RedisObject) HDelKeys(_key string, _prefix string) {
+// 删除指定开头的keys
+func (this *RedisObject)HDelKeys(key string, prefix string)  {
 
-	keys := _key
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
-	keylist := this.HGetKeys(keys, _prefix)
+	keylist := this.HGetKeys(keys, prefix)
 	if len(keylist) > 0 {
 		this.myredis.HDel(keys, keylist...)
 	}
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 获取全部的hash字段
-//@param _key 获取所有字段的key
-func (this *RedisObject) HGetAll(_key string) map[string]string {
+// 获取全部的hash字段
+func (this *RedisObject)HGetAll(key string) map[string] string {
 
-	keys := _key
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
 
 	val := this.myredis.HGetAll(keys)
 	return checkRedisValidMap(keys, val)
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 设置一个分布式锁
-//@param _key 锁的名称
-//@param _value 锁的内容
-//@param _expire 锁的持续时间
-func (this *RedisObject) SetNx(_key string, _value interface{}, _expire uint32) bool {
 
-	keys := _key
+// 设置锁
+func (this *RedisObject) SetNx(key string, value interface{}, expire uint32) bool {
+
+	keys := key
 	if this.prefix != "" {
-		keys = this.prefix + "_" + _key
+		keys = this.prefix+"_"+key
 	}
-	value := buildRedisValue(keys, _expire, _value)
-	rest := this.myredis.SetNX(keys, value, time.Duration(_expire)*time.Second)
+	value = buildRedisValue(keys, expire, value)
+	rest := this.myredis.SetNX(keys, value, time.Duration(expire)*time.Second)
 	if rest == nil {
 		return false
 	}
 
 	if _, err := rest.Result(); err != nil {
+		fmt.Printf(">> SetNX |%v| Failed! Err:%v\n", keys, err)
 		return false
 	}
 
 	return rest.Val()
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 检验redis缓存是否有效
-//@param _keys string redis缓存的键名
-//@param _targetData *StringCmd 目标数据
-func checkRedisValidMap(_keys string, _targetData *redis.StringStringMapCmd) map[string]string {
-	if _targetData == nil || len(_targetData.Val()) == 0 {
-		return nil
-	}
-
-	resp := make(map[string]string)
-	for key, val := range _targetData.Val() {
-
-		var redisInfo RedisCacheInfo
-		err := json.Unmarshal([]byte(val), redisInfo)
-		if err != nil {
-			return nil
-		}
-
-		// 缓存到期
-		if redisInfo.Expire > 0 && redisInfo.Expire < uint32(time.Now().Unix()) {
-			continue
-		}
-
-		// 签名不匹配
-		sign := clCommon.Md5([]byte("Cache:__" + _keys + key))
-		if redisInfo.Sign != sign {
-			continue
-		}
-
-		resp[key] = redisInfo.Data
-	}
-	return resp
-}
 
 // 检验redis缓存是否有效
 // @param keys string redis缓存的键名
 // @param targetData *StringCmd 目标数据
-func checkRedisValid(_keys string, targetData *redis.StringCmd) string {
+func checkRedisValidMap(keys string, targetData *redis.StringStringMapCmd) map[string] string {
+	if targetData == nil || len(targetData.Val()) == 0 {
+		return nil
+	}
+
+	resp := make(map[string] string)
+
+	for key, val := range targetData.Val() {
+		js := cljson.New([]byte(val))
+		expireTime := js.GetUint32("expire")
+		// 缓存到期
+		if expireTime > 0 && expireTime < uint32(time.Now().Unix()) {
+			continue
+		}
+		sign := clCommon.Md5([]byte("Cache:__" + keys + key))
+		if js.GetStr("sign") != sign {
+			continue
+		}
+		resp[key] = js.GetStr("data")
+	}
+	return resp
+}
+
+
+// 检验redis缓存是否有效
+// @param keys string redis缓存的键名
+// @param targetData *StringCmd 目标数据
+func checkRedisValid(keys string, targetData *redis.StringCmd) string {
 	if targetData == nil || targetData.Val() == "" {
 		return ""
 	}
 
-	var redisInfo RedisCacheInfo
-	err := json.Unmarshal([]byte(targetData.Val()), &redisInfo)
-	if err != nil {
-		skylog.LogErr( "json.Unmarshl error: %v", err)
+	js := cljson.New([]byte(targetData.Val()))
+	if js == nil {
 		return ""
 	}
 
-	// 缓存到期
-	if redisInfo.Expire > 0 && redisInfo.Expire < uint32(time.Now().Unix()) {
-		skylog.LogErr( "expire: %v < %v", redisInfo.Expire, uint32(time.Now().Unix()))
+	expireTime := js.GetUint32("expire")
+	addtime := js.GetUint32("addtime")
 
+	// 缓存到期  新增添加时间大于当前时间表示有问题
+	if expireTime == 0 || expireTime < uint32(time.Now().Unix()) {
+		return ""
+	}
+	if addtime > uint32(time.Now().Unix()) {
 		return ""
 	}
 
-	// 签名不匹配
-	sign := clCommon.Md5([]byte("Cache:__" + _keys))
-	if redisInfo.Sign != sign {
-		skylog.LogErr( "check sign error: %v != %v", redisInfo.Sign, sign)
+	sign := clCommon.Md5([]byte( "Cache:__" + keys ))
+	if js.GetStr("sign") != sign {
 		return ""
 	}
 
-	return redisInfo.Data
+	return js.GetStr("data")
 }
 
 // 组装缓存的值
-func buildRedisValue(_keys string, expire uint32, data interface{}) string {
-	var cache_data []byte
-	var err error
-	if _, ok := data.(string); ok {
-		cache_data = []byte(data.(string))
-	} else {
-		cache_data, err = json.Marshal(data)
-	}
-
-
-	if err != nil {
-		return ""
-	}
-	resp, err := json.Marshal(RedisCacheInfo{
-		Data:   string(cache_data),
-		Expire: uint32(time.Now().Unix()) + expire,
-		Sign:   clCommon.Md5([]byte("Cache:__" + _keys)),
-	})
-
-	if err != nil {
-		return ""
-	}
-	return string(resp)
+func buildRedisValue(keys string, expire uint32, data interface{}) string {
+	return cljson.CreateBy(cljson.M{
+		"data": data,
+		"addtime": uint32(time.Now().Unix()), // 写入redis缓存的时间
+		"expire": uint32(time.Now().Unix()) + expire,
+		"sign": clCommon.Md5( []byte( "Cache:__" + keys )),
+	}).ToStr()
 }
 
-// 删除指定用户缓存
-func (this *RedisObject) DelUserCache(uid uint32) {
+// 操作list结构 lpush,push 是会更新key的过期时间
+func (this *RedisObject)Lpush(key string,expire uint32,values ...interface{}) bool {
 
-	this.Del("USER" + "_" + string(uid))
-}
-
-//@author xiaolan
-//@lastUpdate 2019-08-05
-//@comment 删除指定接口缓存
-//@param apiname string 接口名称
-//@param uid uint32 用户的uid，如果为0则删除全部
-func (this *RedisObject) DelApiCache(_apiname string, _uid uint32) {
-
-	if _uid == 0 {
-		this.Del(_apiname)
-		return
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
 	}
-	this.HDelKeys(_apiname, fmt.Sprintf("U%v_", _uid))
-}
+	for k,value:= range values {
+		values[k] = buildRedisValue(keys, uint32(expire), value)
+	}
+	rest := this.myredis.LPush(keys, values...)
 
-func (this *RedisObject) Ping() bool {
-	if this.myredis == nil {
+	// 设置过期时间
+	if expire > 0 {
+		this.myredis.Expire(keys, time.Duration(expire) * 1000 * time.Millisecond)
+	}
+
+	if rest == nil {
 		return false
 	}
-	return this.myredis.Ping().Err() == nil
+	return true
+}
+
+// 操作list结构 lpop
+func (this *RedisObject)Lpop(key string) string {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+
+	val := this.myredis.LPop(keys)
+	result := checkRedisValid(keys, val)
+	return result
+}
+
+
+//取队列元素个数
+func (this *RedisObject) Llen(key string) (error, int64) {
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+
+	result := this.myredis.LLen(keys)
+	return result.Err(), result.Val()
+}
+
+// 操作list结构 rpop
+func (this *RedisObject)Rpop(key string) interface{} {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+
+	val := this.myredis.RPop(keys)
+	result := checkRedisValid(keys, val)
+	return result
+}
+
+// 删除list
+func (this *RedisObject)DelList(key string) {
+
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+
+	this.myredis.LTrim(keys, 1, 0)
+}
+
+
+// 获取key列表
+func (this *RedisObject)GetKeys(key string) []string {
+	res := this.myredis.Keys(key)
+	return res.Val()
+}
+
+
+// 删除所有的类似的key
+func (this *RedisObject)DelAll(key string) {
+
+	res := this.myredis.Keys(key)
+
+	klist, _ := res.Result()
+	this.myredis.Del(klist...)
+}
+
+
+// 判断键是否存在
+func (this *RedisObject) IsExists(key string) bool {
+	res := this.myredis.Exists(key)
+	return res.Val() == 1
+}
+
+
+// 添加一个值
+func (this *RedisObject) SetNXInt(key string, _val int64) bool {
+	var res *redis.BoolCmd
+	res = this.myredis.SetNX(key, _val, 0)
+	return res.Val()
+}
+
+
+// 添加一个值
+func (this *RedisObject) Increment(key string, _val int64) int64 {
+	var res *redis.IntCmd
+	if _val < 0 {
+		res = this.myredis.DecrBy(key, -_val)
+	} else {
+		res = this.myredis.IncrBy(key, _val)
+	}
+	return res.Val()
 }
