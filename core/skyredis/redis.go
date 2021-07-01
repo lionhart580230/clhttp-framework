@@ -117,6 +117,20 @@ func (this *RedisObject)Get(key string) string {
 	return result
 }
 
+
+// 获取最原始的数据
+func (this *RedisObject)GetRaw(key string) string {
+	keys := key
+	if this.prefix != "" {
+		keys = this.prefix+"_"+key
+	}
+	resp := this.myredis.Get(keys)
+	if resp == nil {
+		return ""
+	}
+	return resp.Val()
+}
+
 // 获取指定的值 多語言用 允許空直不刪除
 func (this *RedisObject)GetLang(key string) string {
 

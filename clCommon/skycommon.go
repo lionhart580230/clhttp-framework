@@ -191,6 +191,9 @@ func Bool(ceil string) bool {
 //@lastUpdate 2019-08-05
 //@comment 获取指定范围的整数型随机数
 func RandInt(_min int64, _max int64) int64 {
+	if _max == _min {
+		return _min
+	}
 	rand.Seed(time.Now().UnixNano())
 	return (rand.Int63() % (_max - _min)) + _min
 }
