@@ -117,8 +117,6 @@ func DelUser( _auth *AuthInfo) {
 
 // 获取用户
 func GetUser( _token string ) *AuthInfo {
-	mLocker.RLock()
-	defer mLocker.RUnlock()
 
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
@@ -138,6 +136,8 @@ func GetUser( _token string ) *AuthInfo {
 		return nil
 	}
 
+	mLocker.RLock()
+	defer mLocker.RUnlock()
 	return mAuthMap[_token]
 }
 
@@ -155,7 +155,7 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 		AddUser(this)
 
 		// 清理内存
-		ClearUserData(_uid)
+		ClearUserData(_uid, _token)
 	} else {
 		DelUser(this)
 	}
@@ -163,7 +163,7 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 
 
 // 清理内存 (如果内存中或redis中存在这个uid的数据，则自动清理)
-func ClearUserData(_uid uint64) {
+func ClearUserData(_uid uint64, _ignToken string) {
 	mLocker.Lock()
 	defer mLocker.Unlock()
 
@@ -172,7 +172,7 @@ func ClearUserData(_uid uint64) {
 		redis = clGlobal.GetRedis()
 	}
 	for _, val := range mAuthMap {
-		if val.Uid == _uid {
+		if val.Uid == _uid && val.Token != _ignToken {
 			delete(mAuthMap, val.Token)
 			if redis != nil {
 				redis.Del("U_INFO_" + val.Token)
