@@ -68,7 +68,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		}
 	} else {
 		rq.ParseForm()
-		fmt.Printf("Form: %+v\n", rq.Form)
 		if len(rq.Form) > 0 {
 			for key, val := range rq.Form {
 				if len(val) == 1 {

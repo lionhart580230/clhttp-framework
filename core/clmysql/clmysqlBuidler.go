@@ -115,8 +115,14 @@ func (this *SqlBuider) Table(tablename string) (*SqlBuider) {
    设置WHERE条件
    @param wherestr string WHERE条件文本
  */
-func (this *SqlBuider) Where (wherestr string, args... interface{}) (*SqlBuider){
-	this.whereStr = fmt.Sprintf(wherestr, args...)
+func (this *SqlBuider) Where (wherestr string, args... interface{}) *SqlBuider {
+
+	if args == nil || len(args) == 0 {
+		this.whereStr = wherestr
+	} else {
+		this.whereStr = fmt.Sprintf(wherestr, args...)
+	}
+
 	return this
 }
 
@@ -124,7 +130,7 @@ func (this *SqlBuider) Where (wherestr string, args... interface{}) (*SqlBuider)
 /**
 	设置重复要更新的key列表
  */
-func (this *SqlBuider) OnDuplicateKey(keys []string) (*SqlBuider) {
+func (this *SqlBuider) OnDuplicateKey(keys []string) *SqlBuider {
 	this.duplicateKey = keys
 	return this
 }
@@ -134,7 +140,7 @@ func (this *SqlBuider) OnDuplicateKey(keys []string) (*SqlBuider) {
    设置要查询的Field
    @param fiedlStr string FIELD字段列表
  */
-func (this *SqlBuider) Field(fieldStr string) (*SqlBuider) {
+func (this *SqlBuider) Field(fieldStr string) *SqlBuider {
 	this.fieldStr = fieldStr
 	return this
 }
@@ -144,7 +150,7 @@ func (this *SqlBuider) Field(fieldStr string) (*SqlBuider) {
    设置分组
    @param group string 分组内容
  */
-func (this *SqlBuider) Group(groupStr string) (*SqlBuider) {
+func (this *SqlBuider) Group(groupStr string) *SqlBuider {
 	this.group = groupStr
 	return this
 }
@@ -153,7 +159,7 @@ func (this *SqlBuider) Group(groupStr string) (*SqlBuider) {
    设置排序方式
    @param orders string 排序内容
  */
-func (this *SqlBuider)Order(orders string) (*SqlBuider) {
+func (this *SqlBuider)Order(orders string) *SqlBuider {
 	this.orders = orders
 	return this
 }
@@ -162,7 +168,7 @@ func (this *SqlBuider)Order(orders string) (*SqlBuider) {
    设置Cache 缓存时间
    @param expire int32 缓存有效期
  */
-func (this *SqlBuider) Cache(expire uint32) (*SqlBuider) {
+func (this *SqlBuider) Cache(expire uint32) *SqlBuider {
 	this.expire = expire
 	return this
 }
@@ -173,7 +179,7 @@ func (this *SqlBuider) Cache(expire uint32) (*SqlBuider) {
    @param min int32 设置limit的最小值
    @param count int32 设置limit的数量
  */
-func (this *SqlBuider) Limit(min int32, count int32) (*SqlBuider) {
+func (this *SqlBuider) Limit(min int32, count int32) *SqlBuider {
 	this.limit = fmt.Sprintf(" LIMIT %v, %v", min, count)
 	return this
 }
@@ -183,7 +189,7 @@ func (this *SqlBuider) Limit(min int32, count int32) (*SqlBuider) {
 	设置DB名字
 	@param dbname string 设置DB名字
  */
-func (this *SqlBuider) DB(dbname string) (*SqlBuider) {
+func (this *SqlBuider) DB(dbname string) *SqlBuider {
 	this.dbname = dbname
 	return this
 }

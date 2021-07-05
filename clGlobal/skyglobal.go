@@ -29,6 +29,7 @@ type SkyConfig struct {
 	LogLevel uint32
 
 	IsCluster bool
+	DebugRouter bool
 }
 
 var SkyConf SkyConfig
@@ -59,6 +60,7 @@ func Init(_filename string) {
 
 	conf.GetStr("system", "version", "", &ServerVersion)
 	conf.GetBool("system", "is_cluster", false, &SkyConf.IsCluster)
+	conf.GetBool("system", "debug_router", false, &SkyConf.DebugRouter)
 	skylog.New(ServerVersion)
 
 	skylog.LogDebug("%+v", SkyConf)
