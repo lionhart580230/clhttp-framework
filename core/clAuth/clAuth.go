@@ -130,7 +130,6 @@ func GetUser( _token string ) *AuthInfo {
 			if err != nil {
 				return nil
 			}
-			skylog.LogDebug("获取用户:%v 数据:%+v", _token, userObj)
 			return &userObj
 		}
 		return nil

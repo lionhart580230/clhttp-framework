@@ -1,8 +1,8 @@
 package rule
 
 import (
-	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/clResponse"
 	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
 	"github.com/xiaolan580230/clhttp-framework/core/clCache"
@@ -109,7 +109,6 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
 			value := _param.GetStr(pinfo.Name, "")
-			fmt.Printf("%v => %v\n", pinfo.Name, value)
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {
 					// 严格模式
@@ -163,6 +162,9 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		clCache.UpdateCache(cacheKey, respStr, uint32(ruleinfo.CacheExpire))
 	}
 
-	skylog.LogDebug("[ACK][%s] %s", _server.RemoteIP, respStr)
+	if clGlobal.SkyConf.DebugRouter {
+		skylog.LogDebug("[ACK][%s] %s", _server.RemoteIP, respStr)
+	}
+
 	return respStr
 }
