@@ -35,6 +35,7 @@ const (
 	ContentTypeForm = 0			// 正常form提交
 	ContentParam = 1			// 参数提交(只允许GET)
 	ContentJson = 2				// 通过json提交
+	ContentXml = 3				// 通过xml提交
 )
 
 
@@ -74,9 +75,8 @@ func (this *ClHttpClient) SetMethod(_method string) {
 
 
 // 添加参数
-func (this *ClHttpClient) AddParam(_key string, _val string) {
-
-	this.params[_key] = _val
+func (this *ClHttpClient) AddParam(_key string, _val interface{}) {
+	this.params[_key] = fmt.Sprintf("%v", _val)
 }
 
 
@@ -122,7 +122,6 @@ func (this *ClHttpClient) BuildParamList() string {
 
 	return this.url + "?" + param_str.String()
 }
-
 
 // 开始请求
 func (this *ClHttpClient) Do() (string, error) {
@@ -181,6 +180,7 @@ func (this *ClHttpClient) Do() (string, error) {
 			for key, val := range this.params {
 				r.Form.Add(key, val)
 			}
+
 			bodyStr = strings.TrimSpace(r.Form.Encode())
 			body = strings.NewReader(bodyStr)
 		} else if this.contentType == ContentJson {
@@ -190,6 +190,16 @@ func (this *ClHttpClient) Do() (string, error) {
 				jsonObj[key] = val
 			}
 			body = strings.NewReader(cljson.CreateBy(jsonObj).ToStr())
+		} else if this.contentType == ContentXml {
+
+			xmlStr := strings.Builder{}
+			xmlStr.WriteString("<xml>")
+			for k, v := range this.params {
+				xmlStr.WriteString(fmt.Sprintf("<%v>%v</%v>", k, v, k))
+			}
+			xmlStr.WriteString("</xml>")
+
+			body = strings.NewReader(xmlStr.String())
 		}
 
 	}
@@ -197,7 +207,6 @@ func (this *ClHttpClient) Do() (string, error) {
 
 	req, err := http.NewRequest(this.method, http_url, body)
 	if err != nil {
-
 		return "", errors.New(fmt.Sprintf("HttpProxy: %v 请求地址: %v 错误:%v", this.proxy, http_url, err))
 	}
 
@@ -210,6 +219,8 @@ func (this *ClHttpClient) Do() (string, error) {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	} else if this.contentType == ContentJson {
 		req.Header.Set("Content-Type", "text/json")
+	} else if this.contentType == ContentXml {
+		req.Header.Set("Content-Type", "text/xml")
 	} else {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}

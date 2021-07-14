@@ -805,7 +805,20 @@ func (this *SqlBuider) AddTx(data map[string] interface{}) (int64, error) {
 		return 0, errors.New("EMPTY UPDATE COLUMN LIST")
 	}
 
-	sqlStr := fmt.Sprintf("INSERT INTO %v (%v) VALUES(%v)", this.tablename, fieldstr.String(), valuestr.String())
+	// 拼接重复区
+	onDuplicateStr := strings.Builder{}
+	if this.duplicateKey != nil && len(this.duplicateKey) > 0 {
+		onDuplicateStr.WriteString(" ON DUPLICATE KEY UPDATE ")
+
+		for i, val := range this.duplicateKey {
+			if i > 0 {
+				onDuplicateStr.WriteString(",")
+			}
+			onDuplicateStr.WriteString(fmt.Sprintf("`%[1]v` = VALUES(`%[1]v`)", val))
+		}
+	}
+
+	sqlStr := fmt.Sprintf("INSERT INTO %v (%v) VALUES(%v) %v", this.tablename, fieldstr.String(), valuestr.String(), onDuplicateStr.String())
 	this.finalSql = sqlStr
 	var resp int64
 	var err error
