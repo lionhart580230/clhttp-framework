@@ -43,17 +43,7 @@ func (this *ClTranslate) QueryTx(sqlstr string, args... interface{}) (*DbResult,
 
 // 执行事务
 func (this *ClTranslate)ExecTx(sqlstr string, args... interface{}) (int64, error) {
-	//ss := strings.ToLower(sqlstr)
-	//if strings.Contains(ss, "delete") {
-	//	str_arr := []string{}
-	//	for i:=5;i>=0;i--{
-	//		_, file, line, ok := runtime.Caller(i)
-	//		if ok {
-	//			str_arr = append(str_arr,fmt.Sprintf("%v|%v",file,line))
-	//		}
-	//	}
-	//	cllog.Log.LogWarning("","%v 删除语句 %v",strings.Join(str_arr,"->"),sqlstr)
-	//}
+
 	if this.tx == nil {
 		return 0, errors.New("错误: 事务指针为 nil pointer")
 	}

@@ -16,11 +16,12 @@ import (
 func (this *AuthInfo) SetItem(_key string, _val interface{}) {
 	this.mLocker.RLock()
 	defer this.mLocker.RLock()
-
 	val := fmt.Sprintf("%v", _val)
-	if val[0] == '{' || val[0] == '[' || strings.HasPrefix(val, "map["){
-		jsonBytes, _ := json.Marshal(_val)
-		val = string(jsonBytes)
+	if val != "" {
+		if val[0] == '{' || val[0] == '[' || strings.HasPrefix(val, "map["){
+			jsonBytes, _ := json.Marshal(_val)
+			val = string(jsonBytes)
+		}
 	}
 	this.ExtraData[_key] = val
 	SaveUser(this)
@@ -86,7 +87,11 @@ func (this *AuthInfo) GetFloat32(_key string) float32 {
 
 // 将结果根据指定类型分割
 func (this *AuthInfo) GetSplitBy(_key string, _ceil string) []string {
-	return strings.Split(this.GetStr(_key), _ceil)
+	val := this.GetStr(_key)
+	if val == "" {
+		return []string{}
+	}
+	return strings.Split(val, _ceil)
 }
 
 
