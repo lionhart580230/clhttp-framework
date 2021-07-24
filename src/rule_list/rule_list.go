@@ -16,4 +16,18 @@ func Init() {
 		},
 		CallBack: example.ApiExample,
 	})
+
+
+
+	// 范例: 注册账号接口
+	rule.AddRule(rule.Rule{
+		Request: "upload",
+		Name: "UploadFile",
+		Params: []rule.ParamInfo{
+			rule.NewParam("filename", rule.PTYPE_ALL, true, ""),
+			rule.NewParam("fileExt", rule.PTYPE_ALL, true, ""),
+			rule.NewParam("localPath", rule.PTYPE_ALL, true, ""),
+		},
+		CallBack: example.ApiUploadExample,
+	})
 }

@@ -238,8 +238,7 @@ func (this *DBPointer) QueryByKey(sqlstr string, key string, args... interface{}
 
 
 // 执行
-func (this *DBPointer)Exec(sqlstr string, args... interface{}) (int64, error) {
-//UPDATE game_user_msg SET `status` = '1' WHERE guid = 794585 and accid = 53998;
+func (this *DBPointer) Exec(sqlstr string, args... interface{}) (int64, error) {
 
 	lastSql := sqlstr
 	if args != nil && len(args) != 0 {

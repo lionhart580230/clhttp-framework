@@ -2,12 +2,18 @@ package httpserver
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"github.com/xiaolan580230/clhttp-framework/core/rule"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
+
+var TempDirPath string
 
 //@author xiaolan
 //@lastUpdate 2019-08-09
@@ -15,7 +21,12 @@ import (
 func StartServer(_listenPort uint32) {
 
 	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/upload_test", uploadFileHtml)
+	http.HandleFunc("/uploadFile", uploadFile)
 
+	tempDirPath, _ := ioutil.TempDir("__clhttp_tempfile__", "")
+	TempDirPath = tempDirPath
+	//skylog.LogDebug("temp path: %v", os.TempDir())
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", _listenPort), nil))
 }
 
@@ -142,6 +153,161 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	rw.Header().Set("Charset", "UTF-8")
 	rw.Write([]byte(content))
 }
+
+
+
+// 测试上传页面
+func uploadFileHtml (rw http.ResponseWriter, rq *http.Request) {
+
+	rw.Write([]byte(`
+	<html>  
+  <head>  
+    <title>选择文件</title>
+  </head>  
+  <body>  
+    <form enctype="multipart/form-data" action="/uploadFile" method="post">  
+      <input type="file" name="uploadfile" />  
+      <input type="submit" value="上传文件" />  
+    </form>  
+  </body>  
+</html>
+`))
+}
+
+
+// 上传文件
+func uploadFile (rw http.ResponseWriter, rq *http.Request) {
+	if rq.Method != "POST" {
+		// 不是使用post的一律拒绝
+		rw.WriteHeader(502)
+		return
+	}
+	// 判断路由
+	requestURI := strings.Split(rq.RequestURI, "?")
+	requestArr := strings.Split(requestURI[0], "/")
+	if len(requestArr) < 2 || requestArr[1] == "" {
+		rw.WriteHeader(404)
+		return
+	}
+
+	// 最大内存限制为10MB
+	rq.ParseMultipartForm(10 << 20)
+	clientfd, handler, err := rq.FormFile("uploadfile")
+	if err != nil {
+		skylog.LogErr("加载文件失败: %v", err)
+		rw.WriteHeader(502)
+		return
+	}
+	defer clientfd.Close()
+
+	fileNameArr := strings.Split(handler.Filename, ".")
+	fileExt := fileNameArr[len(fileNameArr)-1]
+
+	// 需要过滤的请求文件类型列表
+	filter_file_ext := []string {
+		"png", "jpg", "gif", "jpeg",
+	}
+
+	// 过滤请求
+	isPass := false
+	for _, filter_ext := range filter_file_ext {
+		if filter_ext == strings.ToLower(fileExt) {
+			isPass = true
+		}
+	}
+
+	if !isPass {
+		rw.WriteHeader(501)
+		return
+	}
+
+	request_url := ""
+	proctol := rq.Header.Get("Proxy-X-Forwarded-Proto")
+	if proctol == "" {
+		proctol = rq.Header.Get("X-Forwarded-Proto")
+	}
+	port := rq.Header.Get("X-Forwarded-Port")
+	if proctol == "https" {
+		request_url = "https://"+rq.Host
+		if port != "443" {
+			request_url += ":"+rq.Header.Get("X-Forwarded-Port")
+		}
+		request_url += rq.RequestURI
+		proctol = "https"
+	} else {
+		request_url = "http://"+rq.Host
+		if port != "80" {
+			request_url += ":"+rq.Header.Get("X-Forwarded-Port")
+		}
+		request_url += rq.RequestURI
+	}
+
+	myUA := rq.Header.Get("Bxvip-Ua")
+	if myUA == "" {
+		myUA = "web"
+	}
+
+	remoteip := rq.Header.Get("X-Forwarded-For")
+	if remoteip == "" {
+		remoteip = rq.Header.Get("X-Real-Ip")
+		if remoteip == "" {
+			remoteip = rq.RemoteAddr
+		}
+	} else {
+		remotes := strings.Split(remoteip, ",")
+		remoteip = remotes[0]
+	}
+
+
+	buffers := make([]byte, 10 << 20)
+	lenOfBuffer, err := clientfd.Read(buffers)
+	if err != nil {
+		skylog.LogErr("读取文件内容失败: %v", err)
+		rw.WriteHeader(502)
+		return
+	}
+	fileName := fmt.Sprintf("%v.%v", clCommon.Md5(buffers[:lenOfBuffer]), fileExt)
+
+	localfd, err := os.OpenFile(os.TempDir() + "/" + fileName, os.O_CREATE | os.O_TRUNC, 0666)
+	if err != nil {
+		skylog.LogErr("打开文件失败! %v", err)
+		rw.WriteHeader(502)
+		return
+	}
+	localfd.Write(buffers[:lenOfBuffer])
+	localfd.Close()
+
+
+	var serObj = rule.ServerParam{
+		RemoteIP:   strings.Split(remoteip, ":")[0],
+		RequestURI: rq.RequestURI,
+		Host:       rq.Host,
+		Method:     rq.Method,
+		RequestURL: request_url,
+		UA:         myUA,
+		UAType:     UAToInt(myUA),
+		Proctol:    proctol,
+		Language:   "zh-cn",
+	}
+
+
+	var rqObj = rule.NewHttpParam(map[string] string{
+		"ac": "UploadFile",			// 执行的动作
+		"filename": fileName,		// 文件名
+		"fileExt": fileExt,			// 文件扩展名
+		"localPath": os.TempDir() + "/" + fileName,  // 本地路径
+	})
+
+	content, contentType := CallHandler("upload", rqObj, &serObj)
+	if contentType == "" {
+		contentType = "text/json"
+	}
+
+	rw.Header().Set("Content-Type", contentType)
+	rw.Write([]byte(content))
+	return
+}
+
 
 //@author xiaolan
 //@lastUpdate 2019-08-11
