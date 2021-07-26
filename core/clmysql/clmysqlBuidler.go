@@ -1267,3 +1267,30 @@ func (this *SqlBuider) AddObj(_resp interface{}, _include_primary bool) (int64, 
 	return resp, nil
 }
 
+
+
+// 覆盖
+func (this *SqlBuider) ReplaceObj(_resp interface{}, _include_primary bool) (int64, error) {
+
+	fieldList, valuesList := GetInsertSql(_resp, _include_primary)
+
+	sqlStr := fmt.Sprintf("REPLACE INTO `%v`.`%v` (`%v`) VALUES('%v')", this.dbname, this.tablename, strings.Join(fieldList, "`,`"), strings.Join(valuesList, "','"))
+
+	var resp int64
+	var err error
+
+	switch this.dbType {
+	case 0:		// 正常
+		resp, err = Exec(sqlStr, 0)
+	case 1:		// Picker
+		resp, err = this.dbPointer.Exec(sqlStr)
+	case 2:		// 事务
+		resp, err = this.dbTx.ExecTx(sqlStr)
+	}
+
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("%v SQL(%v)", err, sqlStr))
+	}
+
+	return resp, nil
+}

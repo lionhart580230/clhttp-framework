@@ -14,8 +14,9 @@ import (
 
 // 设置信息
 func (this *AuthInfo) SetItem(_key string, _val interface{}) {
-	this.mLocker.RLock()
-	defer this.mLocker.RLock()
+	this.mLocker.Lock()
+	defer this.mLocker.Unlock()
+
 	val := fmt.Sprintf("%v", _val)
 	if val != "" {
 		if val[0] == '{' || val[0] == '[' || strings.HasPrefix(val, "map["){
@@ -24,6 +25,25 @@ func (this *AuthInfo) SetItem(_key string, _val interface{}) {
 		}
 	}
 	this.ExtraData[_key] = val
+	SaveUser(this)
+}
+
+
+// 批量设置信息
+func (this *AuthInfo) SetItems(_datas map[string] interface{}) {
+	this.mLocker.Lock()
+	defer this.mLocker.Unlock()
+
+	for _key, _val := range _datas {
+		val := fmt.Sprintf("%v", _val)
+		if val != "" {
+			if val[0] == '{' || val[0] == '[' || strings.HasPrefix(val, "map["){
+				jsonBytes, _ := json.Marshal(_val)
+				val = string(jsonBytes)
+			}
+		}
+		this.ExtraData[_key] = val
+	}
 	SaveUser(this)
 }
 
@@ -36,7 +56,8 @@ func (this *AuthInfo) GetItem(_key string) string {
 // 获取字符串信息
 func (this *AuthInfo) GetStr(_key string) string {
 	this.mLocker.RLock()
-	defer this.mLocker.RLock()
+	defer this.mLocker.RUnlock()
+
 	val, exists := this.ExtraData[_key]
 	if !exists {
 		return ""

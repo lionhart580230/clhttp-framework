@@ -2,6 +2,7 @@ package http_client
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,8 +29,14 @@ type ClHttpClient struct {
 	params map[string]string 	// 参数列表
 	header map[string]string	// 请求头
 	contentType uint32			// 请求文档类型
+	cert *CertConfig			// 证书路径
+
 }
 
+type CertConfig struct {
+	CertFilePath string		// 证书文件路径
+	KeyFilePath string		// 密钥文件路径
+}
 
 const (
 	ContentTypeForm = 0			// 正常form提交
@@ -48,6 +55,7 @@ func NewClient(_url string) *ClHttpClient {
 		timeout: 30,
 		params: make(map[string]string),
 		header: make(map[string]string),
+		cert: nil,
 	}
 
 	client.header["Content-Type"] = "application/x-www-form-urlencoded"
@@ -71,6 +79,15 @@ func (this *ClHttpClient) SetTimeout(_timeout uint32) {
 // 设置方式
 func (this *ClHttpClient) SetMethod(_method string) {
 	this.method = _method
+}
+
+
+// 设置证书路径
+func (this *ClHttpClient) SetCert(_certPath string, _keyPath string) {
+	this.cert = &CertConfig{
+		CertFilePath: _certPath,
+		KeyFilePath:  _keyPath,
+	}
 }
 
 
@@ -136,7 +153,6 @@ func (this *ClHttpClient) Do() (string, error) {
 		if err != nil {
 			return "", err
 		}
-
 		client = &http.Client{
 			Transport: &http.Transport{
 				Dial: func(netw, addr string) (net.Conn, error) {
@@ -153,6 +169,26 @@ func (this *ClHttpClient) Do() (string, error) {
 			},
 		}
 	} else {
+
+		tlsConfig := &tls.Config{}
+		if this.cert != nil {
+			Cacrt, caErr := ioutil.ReadFile(this.cert.CertFilePath)
+			if caErr != nil {
+				return "", caErr
+			}
+			pool := x509.NewCertPool()
+			pool.AppendCertsFromPEM(Cacrt)
+
+			cliCrt, keyErr := tls.LoadX509KeyPair(this.cert.CertFilePath, this.cert.KeyFilePath)
+			if keyErr != nil {
+				return "", caErr
+			}
+
+			tlsConfig.RootCAs = pool
+			tlsConfig.InsecureSkipVerify = true
+			tlsConfig.Certificates = []tls.Certificate{cliCrt}
+		}
+
 		client = &http.Client{
 			Transport: &http.Transport{
 				Dial: func(netw, addr string) (net.Conn, error) {
@@ -164,6 +200,7 @@ func (this *ClHttpClient) Do() (string, error) {
 					return conn, nil
 				},
 				ResponseHeaderTimeout: time.Second * time.Duration(this.timeout),
+				TLSClientConfig: tlsConfig,
 			},
 		}
 	}
@@ -172,7 +209,6 @@ func (this *ClHttpClient) Do() (string, error) {
 	var body io.Reader = nil
 	if this.method == "POST" {
 		http_url = this.url
-
 		if this.contentType == ContentTypeForm {
 			var r = http.Request{}
 			r.ParseForm()
@@ -198,6 +234,7 @@ func (this *ClHttpClient) Do() (string, error) {
 				xmlStr.WriteString(fmt.Sprintf("<%v>%v</%v>", k, v, k))
 			}
 			xmlStr.WriteString("</xml>")
+			fmt.Printf("最终请求: \n%v\n", xmlStr.String())
 
 			body = strings.NewReader(xmlStr.String())
 		}

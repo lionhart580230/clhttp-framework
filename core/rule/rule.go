@@ -97,6 +97,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	// 需要登录
 	if ruleinfo.Login {
 		if authInfo == nil || !authInfo.IsLogin {
+			skylog.LogDebug("TOKEN: %v 登录状态失效!", token)
 			return clResponse.NotLogin()
 		}
 	} else {
