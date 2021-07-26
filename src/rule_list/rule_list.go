@@ -7,6 +7,9 @@ import (
 
 func Init() {
 
+	// 添加请求类型
+	rule.AddRequest("request", "api")
+
 	// 范例: 注册账号接口
 	rule.AddRule(rule.Rule{
 		Request: "request",

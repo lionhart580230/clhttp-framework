@@ -49,9 +49,31 @@ type Rule struct {
 var ruleList map[string]Rule
 var ruleLocker sync.RWMutex
 
+
+// 请求方式
+var requestList map[string]string
+
 func init() {
 	ruleList = make(map[string]Rule)
+	requestList = make(map[string] string)
 }
+
+
+// 添加新的请求方式
+func AddRequest(_request string, _acKey string) {
+	requestList[_request] = _acKey
+}
+
+
+// 获取请求方式的ackey
+func GetRequestAcKey(_request string) string {
+	ackey, exists := requestList[_request]
+	if !exists {
+		return "ac"
+	}
+	return ackey
+}
+
 
 //@author xiaolan
 //@lastUpdate 2019-08-10
@@ -83,8 +105,10 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	ruleLocker.RLock()
 	defer ruleLocker.RUnlock()
 
+	var acKey = GetRequestAcKey(_uri)
+
 	// 通过AC获取到指定的路由
-	acName := _param.GetStr("ac", "")
+	acName := _param.GetStr(acKey, "")
 	ruleinfo, exists := ruleList[_uri + "_" + acName]
 	if !exists {
 		skylog.LogErr( "AC <%v_%v> 不存在!", _uri, acName)

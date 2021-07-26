@@ -3,6 +3,7 @@ package httpserver
 import (
 	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/core/cljson"
 	"github.com/xiaolan580230/clhttp-framework/core/rule"
 	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"io/ioutil"
@@ -26,7 +27,6 @@ func StartServer(_listenPort uint32) {
 
 	tempDirPath, _ := ioutil.TempDir("__clhttp_tempfile__", "")
 	TempDirPath = tempDirPath
-	//skylog.LogDebug("temp path: %v", os.TempDir())
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", _listenPort), nil))
 }
 
@@ -57,43 +57,56 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		return
 	}
 
-	request_name := requestArr[1]
+	requestName := requestArr[1]
 
 	// 过滤请求
-	for _, filter_ext := range filter_file_ext {
-		if strings.HasSuffix(requestArr[1], filter_ext) {
+	for _, filterExt := range filter_file_ext {
+		if strings.HasSuffix(requestArr[1], filterExt) {
 			rw.WriteHeader(404)
 			return
 		}
 	}
 
-	rq.ParseMultipartForm(2 << 32)
-
 	var values = make(map[string]string)
 
-	if nil != rq.MultipartForm && nil != rq.MultipartForm.Value {
-		for key, val := range rq.MultipartForm.Value {
-			if len(val) == 1 {
-				values[key] = val[0]
-			}
+	if rq.Header.Get("Content-Type") == "text/json" || rq.Header.Get("Content-Type") == "application/json" {
+		var jsonBytes = make([]byte, 4096)
+		n, err := rq.Body.Read(jsonBytes)
+		if err != nil && err.Error() != "EOF"{
+			skylog.LogErr("读取json参数失败! 错误:%v", err)
+			rw.WriteHeader(502)
+			return
+		}
+		jsonObj := cljson.New(jsonBytes[:n])
+		if jsonObj != nil {
+			values = jsonObj.ToMap().ToCustom()
 		}
 	} else {
-		rq.ParseForm()
-		if len(rq.Form) > 0 {
-			for key, val := range rq.Form {
+		rq.ParseMultipartForm(2 << 32)
+		if nil != rq.MultipartForm && nil != rq.MultipartForm.Value {
+			for key, val := range rq.MultipartForm.Value {
 				if len(val) == 1 {
 					values[key] = val[0]
+				}
+			}
+		} else {
+			rq.ParseForm()
+			if len(rq.Form) > 0 {
+				for key, val := range rq.Form {
+					if len(val) == 1 {
+						values[key] = val[0]
+					}
+				}
+			}
+			if len(rq.PostForm) > 0 {
+				for key, val := range rq.PostForm {
+					if len(val) == 1 {
+						values[key] = val[0]
+					}
 				}
 			}
 		}
 
-		if len(rq.PostForm) > 0 {
-			for key, val := range rq.PostForm {
-				if len(val) == 1 {
-					values[key] = val[0]
-				}
-			}
-		}
 	}
 
 	var rqObj = rule.NewHttpParam(values)
@@ -139,7 +152,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		Proctol:    proctol,
 		Language:   myLang,
 	}
-	content, contentType := CallHandler(request_name, rqObj, &serObj)
+	content, contentType := CallHandler(requestName, rqObj, &serObj)
 	if contentType == "" {
 		contentType = "text/json"
 	}
@@ -203,23 +216,23 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	fileNameArr := strings.Split(handler.Filename, ".")
 	fileExt := fileNameArr[len(fileNameArr)-1]
 
-	// 需要过滤的请求文件类型列表
-	filter_file_ext := []string {
-		"png", "jpg", "gif", "jpeg",
-	}
-
-	// 过滤请求
-	isPass := false
-	for _, filter_ext := range filter_file_ext {
-		if filter_ext == strings.ToLower(fileExt) {
-			isPass = true
-		}
-	}
-
-	if !isPass {
-		rw.WriteHeader(501)
-		return
-	}
+	//// 需要过滤的请求文件类型列表
+	//filter_file_ext := []string {
+	//	"png", "jpg", "gif", "jpeg",
+	//}
+	//
+	//// 过滤请求
+	//isPass := false
+	//for _, filter_ext := range filter_file_ext {
+	//	if filter_ext == strings.ToLower(fileExt) {
+	//		isPass = true
+	//	}
+	//}
+	//
+	//if !isPass {
+	//	rw.WriteHeader(501)
+	//	return
+	//}
 
 	request_url := ""
 	proctol := rq.Header.Get("Proxy-X-Forwarded-Proto")
