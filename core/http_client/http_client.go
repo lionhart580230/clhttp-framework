@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/core/cljson"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"io"
 	"io/ioutil"
 	"net"
@@ -26,7 +27,7 @@ type ClHttpClient struct {
 	encodetype uint32			// 加密方式
 	aesKey string				// AES加密key
 	simpleKey string			// 一般加密的key
-	params map[string]string 	// 参数列表
+	params map[string]interface{} 	// 参数列表
 	header map[string]string	// 请求头
 	contentType uint32			// 请求文档类型
 	cert *CertConfig			// 证书路径
@@ -53,7 +54,7 @@ func NewClient(_url string) *ClHttpClient {
 		url:    _url,
 		method: "POST",
 		timeout: 30,
-		params: make(map[string]string),
+		params: make(map[string]interface{}),
 		header: make(map[string]string),
 		cert: nil,
 	}
@@ -93,7 +94,7 @@ func (this *ClHttpClient) SetCert(_certPath string, _keyPath string) {
 
 // 添加参数
 func (this *ClHttpClient) AddParam(_key string, _val interface{}) {
-	this.params[_key] = fmt.Sprintf("%v", _val)
+	this.params[_key] = _val
 }
 
 
@@ -121,7 +122,9 @@ func (this *ClHttpClient) Try() string {
 
 // 构建参数
 func (this *ClHttpClient) BuildParamList() string {
-
+	if this.contentType != ContentTypeForm && this.contentType != ContentParam {
+		return this.url
+	}
 	// 参数拼接
 	param_str := strings.Builder{}
 	for PKey, PVal := range this.params {
@@ -214,7 +217,7 @@ func (this *ClHttpClient) Do() (string, error) {
 			r.ParseForm()
 			bodyStr := ""
 			for key, val := range this.params {
-				r.Form.Add(key, val)
+				r.Form.Add(key, fmt.Sprintf("%v", val))
 			}
 
 			bodyStr = strings.TrimSpace(r.Form.Encode())
@@ -225,6 +228,7 @@ func (this *ClHttpClient) Do() (string, error) {
 			for key, val := range this.params {
 				jsonObj[key] = val
 			}
+			skylog.LogInfo("json: %+v", cljson.CreateBy(jsonObj).ToStr())
 			body = strings.NewReader(cljson.CreateBy(jsonObj).ToStr())
 		} else if this.contentType == ContentXml {
 

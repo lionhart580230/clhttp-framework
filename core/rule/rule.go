@@ -25,6 +25,7 @@ type ServerParam struct {
 	Proctol    string			// 目标协议
 	Port       string			// 端口
 	Language   string			// 使用语言信息
+	RawData string				// 原始数据
 }
 
 
@@ -115,8 +116,12 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
+	var authInfo *clAuth.AuthInfo
 	var token = _param.GetStr("token", "")
-	var authInfo = clAuth.GetUser(token)
+	var uid  = _param.GetUint64("uid", 0)
+	if uid > 0 && token != "" {
+		authInfo = clAuth.GetUser(uid, token)
+	}
 
 	// 需要登录
 	if ruleinfo.Login {
