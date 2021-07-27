@@ -2,6 +2,7 @@ package clAuth
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/core/skylog"
@@ -23,7 +24,7 @@ type AuthInfo struct {
 
 var mAuthMap map[string] *AuthInfo
 var mLocker sync.RWMutex
-
+const prefix = "U_INFO_"
 
 func init() {
 	mAuthMap = make(map[string] *AuthInfo)
@@ -39,6 +40,11 @@ func NewUser(_uid uint64, _token string ) *AuthInfo {
 		IsLogin:    false,
 		ExtraData:  make(map[string] string),
 	}
+}
+
+
+func GetUserKey(_uid uint64, _token string) string {
+	return fmt.Sprintf("%v%v_%v", prefix, _uid, _token)
 }
 
 
@@ -67,7 +73,7 @@ func LoadUsers() {
 
 	redis := clGlobal.GetRedis()
 
-	keys := redis.GetKeys("U_INFO_*")
+	keys := redis.GetKeys(prefix + "*")
 	for _, ukey := range keys {
 		var data AuthInfo
 		var jsonStr = clCrypt.Base64Decode(redis.Get(ukey))
@@ -94,7 +100,7 @@ func SaveUser(_auth *AuthInfo) {
 		if err != nil {
 			return
 		}
-		redis.Set("U_INFO_" + _auth.Token, clCrypt.Base64Encode(string(userData)), 3600)
+		redis.Set(GetUserKey(_auth.Uid, _auth.Token), clCrypt.Base64Encode(string(userData)), 3600)
 	}
 }
 
@@ -116,12 +122,12 @@ func DelUser( _auth *AuthInfo) {
 
 
 // 获取用户
-func GetUser( _token string ) *AuthInfo {
+func GetUser( _uid uint64, _token string ) *AuthInfo {
 
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			var userCache = redis.Get("U_INFO_" + _token)
+			var userCache = redis.Get(GetUserKey(_uid, _token))
 			if userCache == "" {
 				return nil
 			}

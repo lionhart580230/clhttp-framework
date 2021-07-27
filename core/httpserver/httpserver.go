@@ -56,7 +56,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		rw.WriteHeader(404)
 		return
 	}
-
 	requestName := requestArr[1]
 
 	// 过滤请求
@@ -66,10 +65,11 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			return
 		}
 	}
+	var contentType = rq.Header.Get("Content-Type")
 
 	var values = make(map[string]string)
-
-	if rq.Header.Get("Content-Type") == "text/json" || rq.Header.Get("Content-Type") == "application/json" {
+	var rawData = ""
+	if contentType == "text/json" || contentType == "application/json" {
 		var jsonBytes = make([]byte, 4096)
 		n, err := rq.Body.Read(jsonBytes)
 		if err != nil && err.Error() != "EOF"{
@@ -81,6 +81,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		if jsonObj != nil {
 			values = jsonObj.ToMap().ToCustom()
 		}
+		rawData = string(jsonBytes[:n])
 	} else {
 		rq.ParseMultipartForm(2 << 32)
 		if nil != rq.MultipartForm && nil != rq.MultipartForm.Value {
@@ -150,7 +151,9 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		UA:         myUA,
 		UAType:     UAToInt(myUA),
 		Proctol:    proctol,
+		Port:       "",
 		Language:   myLang,
+		RawData:    rawData,
 	}
 	content, contentType := CallHandler(requestName, rqObj, &serObj)
 	if contentType == "" {
