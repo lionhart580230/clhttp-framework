@@ -21,10 +21,6 @@ const (
 
 
 const (
-	LOTTERY_DEBUG_VERSION = "v1.0.1"
-)
-
-const (
 	LOG_TYPE_CONSOLE = 0
 	LOG_TYPE_AWS = 1
 	LOG_TYPE_ALI = 2

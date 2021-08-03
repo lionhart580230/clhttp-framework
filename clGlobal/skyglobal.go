@@ -39,7 +39,7 @@ var conf *skyconfig.Config
 
 func Init(_filename string) {
 
-	conf = skyconfig.New(_filename, 300)
+	conf = skyconfig.New(_filename, 0)
 
 	conf.GetStr("mongodb", "mgo_url", "", &SkyConf.MgoUrl)
 	conf.GetStr("mongodb", "mgo_dbname", "", &SkyConf.MgoDBName)

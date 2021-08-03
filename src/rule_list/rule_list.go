@@ -18,6 +18,7 @@ func Init() {
 			rule.NewParam("user", rule.PTYPE_ALL, true, ""),
 		},
 		CallBack: example.ApiExample,
+		CacheExpire: 180,
 	})
 
 

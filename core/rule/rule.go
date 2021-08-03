@@ -189,7 +189,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 
 	// 检查是否需要缓存
 	if ruleinfo.CacheExpire > 0 {
-		clCache.UpdateCache(cacheKey, respStr, uint32(ruleinfo.CacheExpire))
+		clCache.UpdateCacheSimple(cacheKey, respStr, uint32(ruleinfo.CacheExpire))
 	}
 
 	if clGlobal.SkyConf.DebugRouter {

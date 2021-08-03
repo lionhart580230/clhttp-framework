@@ -3,6 +3,7 @@ package skylog
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xiaolan580230/clhttp-framework/core/cltime"
 	"path"
 	"runtime"
 )
@@ -80,7 +81,6 @@ func LogWarning(_fileFormat string, _args... interface{}) {
 	@param args interface{} 各种参数
 */
 func LogErr(_fileFormat string, _args... interface{}) {
-
 	if (logObj.logLevel & LOG_LEVEL_ERR) > 0 {
 		MakeLineHead("", _fileFormat, LOG_LEVEL_ERR, _args...)
 	}
@@ -121,11 +121,7 @@ func MakeLineHead(_title, fileFormat string, level uint8, args... interface{}) s
 
 	switch logObj.logType {
 	case LOG_TYPE_CONSOLE:
-		nowTime, err := GetTimeFormat(0, "01-02 15:04:05")
-		if err != nil {
-			fmt.Printf("log time format failed: %v", err)
-		}
-		linehead := fmt.Sprintf("[%s %v>>%s]%s", nowTime, filenameInfo, logObj.version, fileFormat)
+		linehead := fmt.Sprintf("[%s %v>>%s]%s", cltime.GetDateByFormat(0, "15:04:05"), filenameInfo, logObj.version, fileFormat)
 		logContext = fmt.Sprintf(linehead, args...)
 
 		color := COLOR_WHITE
@@ -162,7 +158,7 @@ func MakeLineHead(_title, fileFormat string, level uint8, args... interface{}) s
 		}
 		linehead := fmt.Sprintf("[%v>>%s]%s", filenameInfo, logObj.version, fileFormat)
 		logContext = fmt.Sprintf(linehead, args...)
-		fmt.Printf("<%v> %v\n", loglevel, logContext)
+		fmt.Printf("%v <%v> %v\n", cltime.GetDateByFormat(0, "15:04:05"), loglevel, logContext)
 	case LOG_TYPE_JSON:
 		loglevel := "UNKNOW"
 		switch level{
