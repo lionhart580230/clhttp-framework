@@ -284,7 +284,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	}
 	fileName := fmt.Sprintf("%v.%v", clCommon.Md5(buffers[:lenOfBuffer]), fileExt)
 
-	localfd, err := os.OpenFile(os.TempDir() + "/" + fileName, os.O_CREATE | os.O_TRUNC, 0666)
+	localfd, err := os.OpenFile(os.TempDir() + fileName, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0666)
 	if err != nil {
 		skylog.LogErr("打开文件失败! %v", err)
 		rw.WriteHeader(502)
@@ -311,7 +311,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 		"ac": "UploadFile",			// 执行的动作
 		"filename": fileName,		// 文件名
 		"fileExt": fileExt,			// 文件扩展名
-		"localPath": os.TempDir() + "/" + fileName,  // 本地路径
+		"localPath": os.TempDir() + fileName,  // 本地路径
 	})
 
 	content, contentType := CallHandler("upload", rqObj, &serObj)
