@@ -108,7 +108,9 @@ func DelApiCache(_uri string, _acName string, _uid uint64, _params map[string]st
 		return
 	}
 	paramsKeys := make([]string, 0)
-	paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", _uid))
+	if ruleinfo.CacheType == 2 {
+		paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", _uid))
+	}
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
 			value := _params[pinfo.Name]
@@ -153,14 +155,15 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 			skylog.LogDebug("TOKEN: %v 登录状态失效!", token)
 			return clResponse.NotLogin()
 		}
-		paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
 	} else {
 		authInfo = clAuth.NewUser(0, "")
 	}
 
 	// 检查参数
 	newParam := NewHttpParam(nil)
-
+	if ruleinfo.CacheType == 2 {
+		paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
+	}
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
 			value := _param.GetStr(pinfo.Name, "")
