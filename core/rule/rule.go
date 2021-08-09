@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/clResponse"
@@ -99,6 +100,27 @@ func BuildCacheKey(_params []string) string {
 
 
 
+// 删除Api缓存
+func DelApiCache(_uri string, _acName string, _uid uint64, _params map[string]string) {
+	ruleinfo, exists := ruleList[_uri + "_" + _acName]
+	if !exists {
+		skylog.LogErr( "删除缓存失败! AC <%v_%v> 不存在!", _uri, _acName)
+		return
+	}
+	paramsKeys := make([]string, 0)
+	paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", _uid))
+	if ruleinfo.Params != nil {
+		for _, pinfo := range ruleinfo.Params {
+			value := _params[pinfo.Name]
+			paramsKeys = append(paramsKeys, pinfo.Name + "=" + value)
+		}
+	}
+	cacheKey := BuildCacheKey(paramsKeys)
+	clCache.DelCache(cacheKey)
+}
+
+
+
 //@author xiaolan
 //@lastUpdate 2019-08-10
 //@comment 调用规则
@@ -123,19 +145,22 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		authInfo = clAuth.GetUser(uid, token)
 	}
 
+	paramsKeys := make([]string, 0)
+
 	// 需要登录
 	if ruleinfo.Login {
 		if authInfo == nil || !authInfo.IsLogin {
 			skylog.LogDebug("TOKEN: %v 登录状态失效!", token)
 			return clResponse.NotLogin()
 		}
+		paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
 	} else {
 		authInfo = clAuth.NewUser(0, "")
 	}
 
 	// 检查参数
 	newParam := NewHttpParam(nil)
-	paramsKeys := make([]string, 0)
+
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
 			value := _param.GetStr(pinfo.Name, "")

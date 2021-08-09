@@ -142,3 +142,20 @@ func GetCache(_key string) string {
 		return string(clCrypt.Base64Decode(val.Data))
 	}
 }
+
+
+
+// 删除缓存
+func DelCache(_key string){
+	mLocker.Lock()
+	defer mLocker.Lock()
+
+	if clGlobal.SkyConf.IsCluster {
+		redis := clGlobal.GetRedis()
+		if redis != nil {
+			redis.Del(_key)
+		}
+	} else {
+		delete(mMemoryCache, _key)
+	}
+}
