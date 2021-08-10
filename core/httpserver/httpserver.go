@@ -300,13 +300,13 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 		RequestURI: rq.RequestURI,
 		Host:       rq.Host,
 		Method:     rq.Method,
+		Header:     rq.Header,
 		RequestURL: request_url,
 		UA:         myUA,
 		UAType:     UAToInt(myUA),
 		Proctol:    proctol,
 		Language:   "zh-cn",
 	}
-
 
 	var rqObj = rule.NewHttpParam(map[string] string{
 		"ac": "UploadFile",			// 执行的动作
