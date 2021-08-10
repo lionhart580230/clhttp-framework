@@ -147,6 +147,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		RequestURI: rq.RequestURI,
 		Host:       rq.Host,
 		Method:     rq.Method,
+		Header:     rq.Header,
 		RequestURL: request_url,
 		UA:         myUA,
 		UAType:     UAToInt(myUA),

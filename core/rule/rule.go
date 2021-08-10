@@ -9,6 +9,7 @@ import (
 	"github.com/xiaolan580230/clhttp-framework/core/clCache"
 	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"github.com/xiaolan580230/clhttp-framework/src/skylang"
+	"net/http"
 	"strings"
 	"sync"
 )
@@ -20,6 +21,7 @@ type ServerParam struct {
 	RequestURI string			// 请求URI
 	Host       string			// 请求域名
 	Method     string			// 请求方法
+	Header     http.Header
 	RequestURL string			// 请求完整地址
 	UA         string			// 目标设备信息
 	UAType     uint32			// 目标设备类型
