@@ -82,8 +82,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			values = jsonObj.ToMap().ToCustom()
 		}
 		rawData = string(jsonBytes[:n])
-	} else if contentType == "multipart/form-data" {
-
+	} else if contentType == "multipart/form-data" || contentType == "application/x-www-form-urlencoded" {
 		rq.ParseForm()
 		if len(rq.Form) > 0 {
 			for key, val := range rq.Form {
@@ -109,7 +108,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			}
 		}
 	}
-
 	var rqObj = rule.NewHttpParam(values)
 
 	remoteip := rq.Header.Get("X-Forwarded-For")
@@ -199,12 +197,11 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
 	rw.Header().Add("Access-Control-Allow-Headers", "*") 			  //header的类型
 
-	
-	if rq.Method != "POST" {
-		// 不是使用post的一律拒绝
-		rw.WriteHeader(502)
-		return
-	}
+	//if rq.Method != "POST" {
+	//	// 不是使用post的一律拒绝
+	//	rw.WriteHeader(502)
+	//	return
+	//}
 
 	if strings.ToUpper(rq.Method) == "OPTIONS" {
 		rw.WriteHeader(200)
