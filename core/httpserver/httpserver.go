@@ -37,7 +37,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 
 	// 跨域支持
 	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
-	rw.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	rw.Header().Add("Access-Control-Allow-Headers", "*") 			//header的类型
 
 	// 需要过滤的请求文件类型列表
 	filter_file_ext := []string{
@@ -65,8 +65,8 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			return
 		}
 	}
-	var contentType = rq.Header.Get("Content-Type")
 
+	var contentType = rq.Header.Get("Content-Type")
 	var values = make(map[string]string)
 	var rawData = ""
 	if contentType == "text/json" || contentType == "application/json" {
@@ -82,6 +82,23 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			values = jsonObj.ToMap().ToCustom()
 		}
 		rawData = string(jsonBytes[:n])
+	} else if contentType == "multipart/form-data" {
+
+		rq.ParseForm()
+		if len(rq.Form) > 0 {
+			for key, val := range rq.Form {
+				if len(val) == 1 {
+					values[key] = val[0]
+				}
+			}
+		}
+		if len(rq.PostForm) > 0 {
+			for key, val := range rq.PostForm {
+				if len(val) == 1 {
+					values[key] = val[0]
+				}
+			}
+		}
 	} else {
 		rq.ParseMultipartForm(2 << 32)
 		if nil != rq.MultipartForm && nil != rq.MultipartForm.Value {
@@ -90,24 +107,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 					values[key] = val[0]
 				}
 			}
-		} else {
-			rq.ParseForm()
-			if len(rq.Form) > 0 {
-				for key, val := range rq.Form {
-					if len(val) == 1 {
-						values[key] = val[0]
-					}
-				}
-			}
-			if len(rq.PostForm) > 0 {
-				for key, val := range rq.PostForm {
-					if len(val) == 1 {
-						values[key] = val[0]
-					}
-				}
-			}
 		}
-
 	}
 
 	var rqObj = rule.NewHttpParam(values)
@@ -197,7 +197,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 
 	// 跨域支持
 	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
-	rw.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	rw.Header().Add("Access-Control-Allow-Headers", "*") 			  //header的类型
 
 	
 	if rq.Method != "POST" {
@@ -205,6 +205,12 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 		rw.WriteHeader(502)
 		return
 	}
+
+	if strings.ToUpper(rq.Method) == "OPTIONS" {
+		rw.WriteHeader(200)
+		return
+	}
+
 	// 判断路由
 	requestURI := strings.Split(rq.RequestURI, "?")
 	requestArr := strings.Split(requestURI[0], "/")
