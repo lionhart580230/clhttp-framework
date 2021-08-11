@@ -194,6 +194,12 @@ func uploadFileHtml (rw http.ResponseWriter, rq *http.Request) {
 
 // 上传文件
 func uploadFile (rw http.ResponseWriter, rq *http.Request) {
+
+	// 跨域支持
+	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
+	rw.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+
+	
 	if rq.Method != "POST" {
 		// 不是使用post的一律拒绝
 		rw.WriteHeader(502)
