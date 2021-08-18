@@ -7,6 +7,7 @@ import (
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/core/cljson"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 )
@@ -157,5 +158,29 @@ func DelCache(_key string){
 		}
 	} else {
 		delete(mMemoryCache, _key)
+	}
+}
+
+
+// 批量删除缓存
+func DelCacheContains(_key string) {
+	mLocker.Lock()
+	defer mLocker.Lock()
+
+	if clGlobal.SkyConf.IsCluster {
+		redis := clGlobal.GetRedis()
+		if redis != nil {
+			keyList := redis.GetKeys(fmt.Sprintf("*%v*", _key))
+			for _, key := range keyList {
+				redis.Del(key)
+			}
+		}
+	} else {
+		for key, _ := range mMemoryCache {
+			if strings.Contains(key, _key) {
+				delete(mMemoryCache, key)
+			}
+		}
+
 	}
 }

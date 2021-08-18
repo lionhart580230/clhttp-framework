@@ -124,6 +124,11 @@ func DelApiCache(_uri string, _acName string, _uid uint64, _params map[string]st
 }
 
 
+// 删除全部Api缓存
+func DelApiCacheAll(_uri string, _acName string) {
+	clCache.DelCacheContains(_uri + "_" + _acName + "_")
+}
+
 
 //@author xiaolan
 //@lastUpdate 2019-08-10
@@ -163,9 +168,6 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 
 	// 检查参数
 	newParam := NewHttpParam(nil)
-	if ruleinfo.CacheType == 2 {
-		paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
-	}
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
 			value := _param.GetStr(pinfo.Name, "")
@@ -202,12 +204,12 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	if ruleinfo.CacheExpire > 0 {
 		// 根据用户缓存
 		if ruleinfo.CacheType == 2 {
-			paramsKeys = append(paramsKeys, "token=" + _param.GetStr("token", ""))
+			paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
 		} else if ruleinfo.CacheType == 1 {
 			// 根据IP缓存
 			paramsKeys = append(paramsKeys, "ip=" + _server.RemoteIP)
 		}
-		cacheKey = BuildCacheKey(paramsKeys)
+		cacheKey = _uri + "_" + acName + "_" + BuildCacheKey(paramsKeys)
 		cacheStr := clCache.GetCache(cacheKey)
 		if cacheStr != "" {
 			return cacheStr
