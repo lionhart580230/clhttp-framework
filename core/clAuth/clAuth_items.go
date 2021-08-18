@@ -66,6 +66,16 @@ func (this *AuthInfo) GetStr(_key string) string {
 }
 
 
+func (this *AuthInfo) PrintMap() {
+	this.mLocker.RLock()
+	defer this.mLocker.RUnlock()
+
+	for k, v := range this.ExtraData {
+		fmt.Printf(">> %v -> %v\n", k, v)
+	}
+}
+
+
 // 获取Int64值
 func (this *AuthInfo) GetInt64(_key string) int64 {
 	return clCommon.Int64(this.GetStr(_key))
@@ -123,4 +133,14 @@ func (this *AuthInfo) GetObject(_key string, _data interface{}) error {
 		return errors.New("not found")
 	}
 	return json.Unmarshal([]byte(jsonStr), _data)
+}
+
+
+// 获取指定数据类型
+func (this *AuthInfo) KeyIsExists(_key string) bool {
+	jsonStr := this.GetStr(_key)
+	if jsonStr == "" {
+		return false
+	}
+	return true
 }

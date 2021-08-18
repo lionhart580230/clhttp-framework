@@ -66,10 +66,10 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		}
 	}
 
-	var contentType = rq.Header.Get("Content-Type")
+	var contentType = strings.ToLower(rq.Header.Get("Content-Type"))
 	var values = make(map[string]string)
 	var rawData = ""
-	if contentType == "text/json" || contentType == "application/json" {
+	if strings.Contains(contentType, "text/json") || strings.Contains(contentType, "application/json") {
 		var jsonBytes = make([]byte, 4096)
 		n, err := rq.Body.Read(jsonBytes)
 		if err != nil && err.Error() != "EOF"{
@@ -82,7 +82,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			values = jsonObj.ToMap().ToCustom()
 		}
 		rawData = string(jsonBytes[:n])
-	} else if contentType == "multipart/form-data" || contentType == "application/x-www-form-urlencoded" {
+	} else if strings.Contains(contentType, "multipart/form-data") || strings.Contains(contentType, "application/x-www-form-urlencoded") {
 		rq.ParseForm()
 		if len(rq.Form) > 0 {
 			for key, val := range rq.Form {
