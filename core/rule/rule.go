@@ -28,6 +28,7 @@ type ServerParam struct {
 	Proctol    string			// 目标协议
 	Port       string			// 端口
 	Language   string			// 使用语言信息
+	LangType   uint32			// 使用语言信息
 	RawData string				// 原始数据
 }
 
@@ -50,15 +51,15 @@ type Rule struct {
 }
 
 // 路由列表
-var ruleList map[string]Rule
+var ruleList map[string] Rule
 var ruleLocker sync.RWMutex
 
 
 // 请求方式
-var requestList map[string]string
+var requestList map[string] string
 
 func init() {
-	ruleList = make(map[string]Rule)
+	ruleList = make(map[string] Rule)
 	requestList = make(map[string] string)
 }
 
@@ -151,14 +152,14 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	var token = _param.GetStr("token", "")
 	var uid  = _param.GetUint64("uid", 0)
 	if uid > 0 && token != "" {
-		authInfo = clAuth.GetUser(uid, token)
+		authInfo = clAuth.GetUser(uid)
 	}
 
 	paramsKeys := make([]string, 0)
 
 	// 需要登录
 	if ruleinfo.Login {
-		if authInfo == nil || !authInfo.IsLogin {
+		if authInfo == nil || authInfo.Token != token || !authInfo.IsLogin {
 			skylog.LogDebug("TOKEN: %v 登录状态失效!", token)
 			return clResponse.NotLogin()
 		}

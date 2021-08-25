@@ -3,6 +3,7 @@ package clResponse
 import (
 	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
+	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"strings"
 )
 
@@ -17,13 +18,13 @@ func ImportI18N(_langType uint32, _data string) {
 	mI18NMap[_langType] = make(map[uint32] string)
 	data := strings.Split(_data, "\n")
 	for _, val := range data {
-		items := strings.Split(strings.Trim(val, "\n\r"), ",")
-		if len(items) != 2 {
+		items := strings.Split(strings.Trim(val, "\n\r"), "=")
+		if len(items) < 2 {
 			continue
 		}
-		mI18NMap[_langType][ clCommon.Uint32(items[0])] = items[1]
+		mI18NMap[_langType][ clCommon.Uint32(items[0])] = strings.Join(items[1:], "=")
 	}
-
+	skylog.LogDebug("加载:%v语言包成功! %+v", _langType, mI18NMap[_langType])
 }
 
 

@@ -6,7 +6,6 @@ import (
 	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/core/skylog"
-	"github.com/xiaolan580230/clhttp-framework/core/skyredis"
 	"sync"
 	"time"
 )
@@ -22,12 +21,12 @@ type AuthInfo struct {
 	mLocker sync.RWMutex		// 异步锁
 }
 
-var mAuthMap map[string] *AuthInfo
+var mAuthMap map[ uint64 ] *AuthInfo
 var mLocker sync.RWMutex
 const prefix = "U_INFO_"
 
 func init() {
-	mAuthMap = make(map[string] *AuthInfo)
+	mAuthMap = make(map[ uint64 ] *AuthInfo)
 }
 
 
@@ -43,8 +42,9 @@ func NewUser(_uid uint64, _token string ) *AuthInfo {
 }
 
 
-func GetUserKey(_uid uint64, _token string) string {
-	return fmt.Sprintf("%v%v_%v", prefix, _uid, _token)
+// 获取用户缓存Key
+func GetUserKey(_uid uint64) string {
+	return fmt.Sprintf("%v%v", prefix, _uid)
 }
 
 
@@ -60,7 +60,7 @@ func AddUser( _auth *AuthInfo) {
 		return
 	}
 
-	mAuthMap[_auth.Token] = _auth
+	mAuthMap[ _auth.Uid ] = _auth
 }
 
 
@@ -69,7 +69,7 @@ func LoadUsers() {
 	mLocker.Lock()
 	defer mLocker.Unlock()
 
-	mAuthMap = make(map[string] *AuthInfo)
+	mAuthMap = make(map[uint64] *AuthInfo)
 
 	redis := clGlobal.GetRedis()
 
@@ -83,13 +83,17 @@ func LoadUsers() {
 			continue
 		}
 		skylog.LogInfo("成功加载用户: %v -> %v", data.Token, data.Uid)
-		mAuthMap[ data.Token ] = &data
+		mAuthMap[ data.Uid ] = &data
 	}
 }
 
 
 // 保存用户信息到数据库
 func SaveUser(_auth *AuthInfo) {
+	if _auth.Uid == 0 {
+		return
+	}
+
 	if !clGlobal.SkyConf.IsCluster {
 		return
 	}
@@ -100,7 +104,7 @@ func SaveUser(_auth *AuthInfo) {
 		if err != nil {
 			return
 		}
-		redis.Set(GetUserKey(_auth.Uid, _auth.Token), clCrypt.Base64Encode(string(userData)), 3600)
+		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode(string(userData)), 3600)
 	}
 }
 
@@ -117,17 +121,19 @@ func DelUser( _auth *AuthInfo) {
 		}
 		return
 	}
-	delete(mAuthMap, _auth.Token)
+	delete(mAuthMap, _auth.Uid)
 }
 
 
 // 获取用户
-func GetUser( _uid uint64, _token string ) *AuthInfo {
-
+func GetUser( _uid uint64 ) *AuthInfo {
+	if _uid == 0 {
+		return nil
+	}
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			var userCache = redis.Get(GetUserKey(_uid, _token))
+			var userCache = redis.Get(GetUserKey(_uid))
 			if userCache == "" {
 				return nil
 			}
@@ -143,7 +149,7 @@ func GetUser( _uid uint64, _token string ) *AuthInfo {
 
 	mLocker.RLock()
 	defer mLocker.RUnlock()
-	return mAuthMap[_token]
+	return mAuthMap[ _uid ]
 }
 
 
@@ -158,34 +164,10 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 		this.Uid = _uid
 		this.Token = _token
 		AddUser(this)
-
-		// 清理内存
-		ClearUserData(_uid, _token)
 	} else {
 		DelUser(this)
 	}
 }
-
-
-// 清理内存 (如果内存中或redis中存在这个uid的数据，则自动清理)
-func ClearUserData(_uid uint64, _ignToken string) {
-	mLocker.Lock()
-	defer mLocker.Unlock()
-
-	var redis *skyredis.RedisObject
-	if clGlobal.SkyConf.IsCluster {
-		redis = clGlobal.GetRedis()
-	}
-	for _, val := range mAuthMap {
-		if val.Uid == _uid && val.Token != _ignToken {
-			delete(mAuthMap, val.Token)
-			if redis != nil {
-				redis.Del("U_INFO_" + val.Token)
-			}
-		}
-	}
-}
-
 
 // 是否登录
 func (this *AuthInfo) CheckLogin() bool {

@@ -67,10 +67,14 @@ func GetInsertSql(_val interface{}, _primary bool) ([]string, []string) {
 
 	for i := 0; i < _type.NumField(); i++ {
 
-		if (!_primary) {
+		if !_primary {
 			if strings.ToUpper(_type.Field(i).Tag.Get("primary")) == "TRUE" {
 				continue
 			}
+		}
+
+		if _type.Field(i).Tag.Get("db") == "" {
+			continue
 		}
 
 		_fields = append(_fields, _type.Field(i).Tag.Get("db"))
