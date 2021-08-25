@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/xiaolan580230/clhttp-framework/core/cljson"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"io"
 	"io/ioutil"
 	"net"
@@ -44,6 +43,7 @@ const (
 	ContentParam = 1			// 参数提交(只允许GET)
 	ContentJson = 2				// 通过json提交
 	ContentXml = 3				// 通过xml提交
+	ContentXWWWFormUrl = 4		// 通过x-www-from-urlencode方式提交
 )
 
 
@@ -228,7 +228,6 @@ func (this *ClHttpClient) Do() (string, error) {
 			for key, val := range this.params {
 				jsonObj[key] = val
 			}
-			skylog.LogInfo("json: %+v", cljson.CreateBy(jsonObj).ToStr())
 			body = strings.NewReader(cljson.CreateBy(jsonObj).ToStr())
 		} else if this.contentType == ContentXml {
 
@@ -238,11 +237,15 @@ func (this *ClHttpClient) Do() (string, error) {
 				xmlStr.WriteString(fmt.Sprintf("<%v>%v</%v>", k, v, k))
 			}
 			xmlStr.WriteString("</xml>")
-			fmt.Printf("最终请求: \n%v\n", xmlStr.String())
 
 			body = strings.NewReader(xmlStr.String())
+		} else if this.contentType == ContentXWWWFormUrl {
+			var urlData = url.Values{}
+			for k, v := range this.params {
+				urlData.Add(k, fmt.Sprintf("%v", v))
+			}
+			body = strings.NewReader(urlData.Encode())
 		}
-
 	}
 	http_url = this.BuildParamList()
 
@@ -262,8 +265,10 @@ func (this *ClHttpClient) Do() (string, error) {
 		req.Header.Set("Content-Type", "text/json")
 	} else if this.contentType == ContentXml {
 		req.Header.Set("Content-Type", "text/xml")
-	} else {
+	} else if this.contentType == ContentXWWWFormUrl {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		req.Header.Set("Content-Type", "application/form-data")
 	}
 
 	res, err := client.Do(req)

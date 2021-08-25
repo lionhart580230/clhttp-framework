@@ -128,14 +128,14 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 
 	request_url = "https://" + rq.Host + rq.RequestURI
 
-	myUA := rq.Header.Get("platform")
+	myUA := rq.Header.Get("Platform")
 	if myUA == "" {
 		myUA = "web"
 	}
 
-	myLang := rq.Header.Get("Sky-Server-Lang")
+	myLang := rq.Header.Get("Lang-Type")
 	if myLang == "" {
-		myLang = "zhcn_simple"
+		myLang = "1"
 	}
 	if strings.HasPrefix(remoteip, "[::1]") {
 		remoteip = strings.ReplaceAll(remoteip, "[::1]", "127.0.0.1")
@@ -152,6 +152,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		Proctol:    proctol,
 		Port:       "",
 		Language:   myLang,
+		LangType:   clCommon.Uint32(myLang),
 		RawData:    rawData,
 	}
 	content, contentType := CallHandler(requestName, rqObj, &serObj)
