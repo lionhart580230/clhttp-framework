@@ -3,9 +3,9 @@ package clCache
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clJson"
 	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
-	"github.com/xiaolan580230/clhttp-framework/core/cljson"
 	"reflect"
 	"strings"
 	"sync"
@@ -61,7 +61,7 @@ func UpdateCache(_key string, _obj interface{}, _expire uint32) {
 	if IsSimpleType(_obj) {
 		jsonStr = fmt.Sprintf("%v", _obj)
 	} else {
-		jsonStr = cljson.CreateBy(_obj).ToStr()
+		jsonStr = clJson.CreateBy(_obj).ToStr()
 	}
 
 	var data = clCrypt.Base64Encode( jsonStr )

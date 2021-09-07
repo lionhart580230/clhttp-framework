@@ -3,9 +3,9 @@ package clAuth
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"sync"
 	"time"
 )
@@ -23,10 +23,15 @@ type AuthInfo struct {
 
 var mAuthMap map[ uint64 ] *AuthInfo
 var mLocker sync.RWMutex
-const prefix = "U_INFO_"
+var prefix = "U_INFO_"
 
 func init() {
 	mAuthMap = make(map[ uint64 ] *AuthInfo)
+}
+
+// 设置用户登录缓存前缀
+func SetAuthPrefix(_prefix string) {
+	prefix = _prefix
 }
 
 
@@ -79,10 +84,10 @@ func LoadUsers() {
 		var jsonStr = clCrypt.Base64Decode(redis.Get(ukey))
 		var err = json.Unmarshal(jsonStr, &data)
 		if err != nil {
-			skylog.LogErr("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
+			clLog.Error("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
 			continue
 		}
-		skylog.LogInfo("成功加载用户: %v -> %v", data.Token, data.Uid)
+		clLog.Error("成功加载用户: %v -> %v", data.Token, data.Uid)
 		mAuthMap[ data.Uid ] = &data
 	}
 }

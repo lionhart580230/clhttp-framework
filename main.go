@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/core/httpserver"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"github.com/xiaolan580230/clhttp-framework/src/rule_list"
 )
 
@@ -17,8 +17,6 @@ func main() {
 
 	rule_list.Init()
 
-	skylog.LogInfo( "正在启动服务，端口: %v", HTTPServerPort)
+	clLog.Info( "正在启动服务，端口: %v", HTTPServerPort)
 	httpserver.StartServer(HTTPServerPort)
 }
-
-

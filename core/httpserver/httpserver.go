@@ -2,10 +2,10 @@ package httpserver
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clJson"
+	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
-	"github.com/xiaolan580230/clhttp-framework/core/cljson"
 	"github.com/xiaolan580230/clhttp-framework/core/rule"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -73,11 +73,11 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		var jsonBytes = make([]byte, 4096)
 		n, err := rq.Body.Read(jsonBytes)
 		if err != nil && err.Error() != "EOF"{
-			skylog.LogErr("读取json参数失败! 错误:%v", err)
+			clLog.Error("读取json参数失败! 错误:%v", err)
 			rw.WriteHeader(502)
 			return
 		}
-		jsonObj := cljson.New(jsonBytes[:n])
+		jsonObj := clJson.New(jsonBytes[:n])
 		if jsonObj != nil {
 			values = jsonObj.ToMap().ToCustom()
 		}
@@ -221,7 +221,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	rq.ParseMultipartForm(10 << 20)
 	clientfd, handler, err := rq.FormFile("uploadfile")
 	if err != nil {
-		skylog.LogErr("加载文件失败: %v", err)
+		clLog.Error("加载文件失败: %v", err)
 		rw.WriteHeader(502)
 		return
 	}
@@ -289,7 +289,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	buffers := make([]byte, 10 << 20)
 	lenOfBuffer, err := clientfd.Read(buffers)
 	if err != nil {
-		skylog.LogErr("读取文件内容失败: %v", err)
+		clLog.Error("读取文件内容失败: %v", err)
 		rw.WriteHeader(502)
 		return
 	}
@@ -297,7 +297,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 
 	localfd, err := os.OpenFile(os.TempDir() + fileName, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, 0666)
 	if err != nil {
-		skylog.LogErr("打开文件失败! %v", err)
+		clLog.Error("打开文件失败! %v", err)
 		rw.WriteHeader(502)
 		return
 	}

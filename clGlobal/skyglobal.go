@@ -1,10 +1,10 @@
 package clGlobal
 
 import (
-	"github.com/xiaolan580230/clhttp-framework/core/clmysql"
+	"github.com/xiaolan580230/clUtil/clLog"
+	"github.com/xiaolan580230/clUtil/clMysql"
+	"github.com/xiaolan580230/clUtil/clRedis"
 	"github.com/xiaolan580230/clhttp-framework/core/skyconfig"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
-	"github.com/xiaolan580230/clhttp-framework/core/skyredis"
 
 )
 
@@ -33,8 +33,8 @@ type SkyConfig struct {
 }
 
 var SkyConf SkyConfig
-var mRedis *skyredis.RedisObject
-var mMysql *clmysql.DBPointer
+var mRedis *clRedis.RedisObject
+var mMysql *clMysql.DBPointer
 var conf *skyconfig.Config
 
 func Init(_filename string) {
@@ -55,28 +55,22 @@ func Init(_filename string) {
 	conf.GetStr("redis", "redis_prefix", "", &SkyConf.RedisPrefix)
 	conf.GetStr("redis", "redis_password", "", &SkyConf.RedisPass)
 
-	conf.GetUint32("system", "log_type", skylog.LOG_TYPE_ALI, &SkyConf.LogType)
-	conf.GetUint32("system", "log_level", skylog.LOG_LEVEL_ALL, &SkyConf.LogLevel)
-
 	conf.GetStr("system", "version", "", &ServerVersion)
 	conf.GetBool("system", "is_cluster", false, &SkyConf.IsCluster)
 	conf.GetBool("system", "debug_router", false, &SkyConf.DebugRouter)
-	skylog.New(ServerVersion)
 
-	skylog.LogDebug("%+v", SkyConf)
-	skylog.SetLevel(SkyConf.LogLevel)
-	skylog.SetType(SkyConf.LogType)
+	clLog.Debug("%+v", SkyConf)
 }
 
 
 // 获取redis连线
-func GetRedis() *skyredis.RedisObject {
+func GetRedis() *clRedis.RedisObject {
 	if mRedis != nil && mRedis.Ping() {
 		return mRedis
 	}
-	newRedis, err := skyredis.New(SkyConf.RedisHost, SkyConf.RedisPass, SkyConf.RedisPrefix)
+	newRedis, err := clRedis.New(SkyConf.RedisHost, SkyConf.RedisPass, SkyConf.RedisPrefix)
 	if err != nil {
-		skylog.LogErr("连接redis [%v] [%v] 失败! %v", SkyConf.RedisHost, SkyConf.RedisPass, err)
+		clLog.Error("连接redis [%v] [%v] 失败! %v", SkyConf.RedisHost, SkyConf.RedisPass, err)
 		return nil
 	}
 	mRedis = newRedis
@@ -85,12 +79,12 @@ func GetRedis() *skyredis.RedisObject {
 
 
 // 获取mysql连线
-func GetMysql() *clmysql.DBPointer {
+func GetMysql() *clMysql.DBPointer {
 	if mMysql != nil && mMysql.IsUsefull() {
 		return mMysql
 	}
 
-	db, err := clmysql.NewDB(SkyConf.MysqlHost, SkyConf.MysqlUser, SkyConf.MysqlPass, SkyConf.MysqlName)
+	db, err := clMysql.NewDB(SkyConf.MysqlHost, SkyConf.MysqlUser, SkyConf.MysqlPass, SkyConf.MysqlName)
 	if err != nil {
 		return nil
 	}

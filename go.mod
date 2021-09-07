@@ -7,5 +7,8 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/json-iterator/go v1.1.11
 	github.com/onsi/gomega v1.12.0 // indirect
+	github.com/xiaolan580230/clUtil v1.1.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
+
+replace github.com/xiaolan580230/clUtil => /Users/xiaolan/Project/gamemaker/clUtil

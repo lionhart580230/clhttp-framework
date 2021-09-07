@@ -2,12 +2,12 @@ package rule
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/clResponse"
 	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
 	"github.com/xiaolan580230/clhttp-framework/core/clCache"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"github.com/xiaolan580230/clhttp-framework/src/skylang"
 	"net/http"
 	"strings"
@@ -107,7 +107,7 @@ func BuildCacheKey(_params []string) string {
 func DelApiCache(_uri string, _acName string, _uid uint64, _params map[string]string) {
 	ruleinfo, exists := ruleList[_uri + "_" + _acName]
 	if !exists {
-		skylog.LogErr( "删除缓存失败! AC <%v_%v> 不存在!", _uri, _acName)
+		clLog.Error( "删除缓存失败! AC <%v_%v> 不存在!", _uri, _acName)
 		return
 	}
 	paramsKeys := make([]string, 0)
@@ -144,7 +144,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	acName := _param.GetStr(acKey, "")
 	ruleinfo, exists := ruleList[_uri + "_" + acName]
 	if !exists {
-		skylog.LogErr( "AC <%v_%v> 不存在!", _uri, acName)
+		clLog.Error( "AC <%v_%v> 不存在!", _uri, acName)
 		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
@@ -160,7 +160,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	// 需要登录
 	if ruleinfo.Login {
 		if authInfo == nil || authInfo.Token != token || !authInfo.IsLogin {
-			skylog.LogDebug("TOKEN: %v 登录状态失效!", token)
+			clLog.Debug("TOKEN: %v 登录状态失效!", token)
 			return clResponse.NotLogin()
 		}
 	} else {
@@ -196,7 +196,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 
 	// 如果回调函数不存在
 	if ruleinfo.CallBack == nil {
-		skylog.LogErr("AC[%v]回调函数为空!", acName)
+		clLog.Error("AC[%v]回调函数为空!", acName)
 		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
@@ -226,7 +226,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	}
 
 	if clGlobal.SkyConf.DebugRouter {
-		skylog.LogDebug("[ACK][%s] %s", _server.RemoteIP, respStr)
+		clLog.Debug("[ACK][%s] %s", _server.RemoteIP, respStr)
 	}
 
 	return respStr

@@ -2,8 +2,8 @@ package clResponse
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
-	"github.com/xiaolan580230/clhttp-framework/core/skylog"
 	"strings"
 )
 
@@ -24,7 +24,7 @@ func ImportI18N(_langType uint32, _data string) {
 		}
 		mI18NMap[_langType][ clCommon.Uint32(items[0])] = strings.Join(items[1:], "=")
 	}
-	skylog.LogDebug("加载:%v语言包成功! %+v", _langType, mI18NMap[_langType])
+	clLog.Debug("加载:%v语言包成功! %+v", _langType, mI18NMap[_langType])
 }
 
 
