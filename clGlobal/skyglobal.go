@@ -59,7 +59,9 @@ func Init(_filename string) {
 	conf.GetBool("system", "is_cluster", false, &SkyConf.IsCluster)
 	conf.GetBool("system", "debug_router", false, &SkyConf.DebugRouter)
 
-	clLog.Debug("%+v", SkyConf)
+	if SkyConf.DebugRouter {
+		clLog.Debug("%+v", SkyConf)
+	}
 }
 
 

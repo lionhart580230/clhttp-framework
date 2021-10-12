@@ -144,7 +144,9 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	acName := _param.GetStr(acKey, "")
 	ruleinfo, exists := ruleList[_uri + "_" + acName]
 	if !exists {
-		clLog.Error( "AC <%v_%v> 不存在!", _uri, acName)
+		if clGlobal.SkyConf.DebugRouter {
+			clLog.Error( "AC <%v_%v> 不存在! IP: %v", _uri, acName, _server.RemoteIP)
+		}
 		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
@@ -160,7 +162,9 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	// 需要登录
 	if ruleinfo.Login {
 		if authInfo == nil || authInfo.Token != token || !authInfo.IsLogin {
-			clLog.Debug("TOKEN: %v 登录状态失效!", token)
+			if clGlobal.SkyConf.DebugRouter {
+				clLog.Debug("TOKEN: %v 登录状态失效!", token)
+			}
 			return clResponse.NotLogin()
 		}
 	} else {
@@ -196,7 +200,9 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 
 	// 如果回调函数不存在
 	if ruleinfo.CallBack == nil {
-		clLog.Error("AC[%v]回调函数为空!", acName)
+		if clGlobal.SkyConf.DebugRouter {
+			clLog.Error("AC[%v]回调函数为空!", acName)
+		}
 		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 	}
 
@@ -228,6 +234,5 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	if clGlobal.SkyConf.DebugRouter {
 		clLog.Debug("[ACK][%s] %s", _server.RemoteIP, respStr)
 	}
-
 	return respStr
 }

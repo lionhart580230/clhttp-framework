@@ -87,7 +87,7 @@ func LoadUsers() {
 			clLog.Error("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
 			continue
 		}
-		clLog.Error("成功加载用户: %v -> %v", data.Token, data.Uid)
+		//clLog.Error("成功加载用户: %v -> %v", data.Token, data.Uid)
 		mAuthMap[ data.Uid ] = &data
 	}
 }
@@ -109,7 +109,7 @@ func SaveUser(_auth *AuthInfo) {
 		if err != nil {
 			return
 		}
-		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode(string(userData)), 3600)
+		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode(string(userData)), 86400)
 	}
 }
 
