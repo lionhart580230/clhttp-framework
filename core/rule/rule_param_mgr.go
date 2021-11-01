@@ -27,6 +27,7 @@ const (
 	PTYPE_NUMBER_LIST = 16 // 数字列表，用半角逗号隔开的数字
 	PTYPE_PHONE       = 17 // 手机号码
 	PTYPE_VCODE       = 18 // 短信验证码或邮箱验证码，固定6位数字
+	PTYPE_ID_CARD     = 19 // 身份证号
 )
 
 const (
@@ -202,6 +203,22 @@ func init() {
 			return PARAM_CHECK_FAIED
 		}
 		return _param
+	}
+
+	// 身份证
+	paramCheckers[PTYPE_ID_CARD] = func(_param string) string {
+		_IDRe18 := `/^([1-6][1-9]|50)\d{4}(18|19|20)\d{2}((0[1-9])|10|11|12)(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/`
+		_IDre15 :=  `/^([1-6][1-9]|50)\d{4}\d{2}((0[1-9])|10|11|12)(([0-2][1-9])|10|20|30|31)\d{3}$/`
+
+		match18, err18 := regexp.Match(_IDRe18, []byte(_param))
+		match15, err15 := regexp.Match(_IDre15, []byte(_param))
+		if err18 != nil  {
+		}
+		// 校验身份证：
+		if (err18 == nil && match18) || (err15 == nil && match15) {
+			return _param
+		}
+		return ""
 	}
 }
 
