@@ -68,6 +68,13 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 
 	var contentType = strings.ToLower(rq.Header.Get("Content-Type"))
 	var values = make(map[string]string)
+
+	getData := rq.URL.Query()
+	for key, val := range getData {
+		values[key] = val[0]
+	}
+	clLog.Debug("获取GET 参数: %+v", getData)
+
 	var rawData = ""
 	if strings.Contains(contentType, "text/json") || strings.Contains(contentType, "application/json") {
 		var jsonBytes = make([]byte, 4096)
