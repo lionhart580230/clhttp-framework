@@ -48,6 +48,7 @@ type Rule struct {
 	CacheType int		// 缓存启动的时候才有效 0=全局缓存,1=根据IP缓存,2=根据用户缓存
 	Login bool			// 是否登录才可以访问这个接口
 	Method string		// 请求方法, 为空则不限制请求方法, POST则为只允许POST请求
+	RespContent string  // 返回的结构体内容格式 默认是 text/json
 }
 
 // 路由列表
@@ -134,7 +135,7 @@ func DelApiCacheAll(_uri string, _acName string) {
 //@author xiaolan
 //@lastUpdate 2019-08-10
 //@comment 调用规则
-func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
+func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, string) {
 	ruleLocker.RLock()
 	defer ruleLocker.RUnlock()
 
@@ -147,7 +148,11 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		if clGlobal.SkyConf.DebugRouter {
 			clLog.Error( "AC <%v_%v> 不存在! IP: %v", _uri, acName, _server.RemoteIP)
 		}
-		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
+		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil), "text/json"
+	}
+
+	if ruleinfo.RespContent == "" {
+		ruleinfo.RespContent = "text/json"
 	}
 
 	var authInfo *clAuth.AuthInfo
@@ -165,7 +170,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 			if clGlobal.SkyConf.DebugRouter {
 				clLog.Debug("TOKEN: %v 登录状态失效!", token)
 			}
-			return clResponse.NotLogin()
+			return clResponse.NotLogin(), ruleinfo.RespContent
 		}
 	} else {
 		authInfo = clAuth.NewUser(0, "")
@@ -179,7 +184,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {
 					// 严格模式
-					return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name)
+					return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name), ruleinfo.RespContent
 				} else {
 					value = pinfo.Default
 				}
@@ -187,7 +192,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 				if !pinfo.CheckParam(value) {
 					if pinfo.Static {
 						// 严格模式
-						return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name)
+						return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "参数:" + pinfo.Name + "不合法!", pinfo.Name), ruleinfo.RespContent
 					} else {
 						value = pinfo.Default
 					}
@@ -203,7 +208,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		if clGlobal.SkyConf.DebugRouter {
 			clLog.Error("AC[%v]回调函数为空!", acName)
 		}
-		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
+		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil), "text/json"
 	}
 
 	// 检查是否需要缓存
@@ -219,7 +224,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 		cacheKey = _uri + "_" + acName + "_" + BuildCacheKey(paramsKeys)
 		cacheStr := clCache.GetCache(cacheKey)
 		if cacheStr != "" {
-			return cacheStr
+			return cacheStr, ruleinfo.RespContent
 		}
 	}
 
@@ -234,5 +239,6 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) string {
 	if clGlobal.SkyConf.DebugRouter {
 		clLog.Debug("[ACK][%s] %s", _server.RemoteIP, respStr)
 	}
-	return respStr
+
+	return respStr, ruleinfo.RespContent
 }

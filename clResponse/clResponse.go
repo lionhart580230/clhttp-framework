@@ -47,6 +47,12 @@ func JCodeByLang(_langType, _msg uint32, _data interface{}, _param ...interface{
 }
 
 
+// 返回自定义内容
+func Diy(_diyContent string) string {
+	return _diyContent
+}
+
+
 // 系统内部错误
 // 如: 数据库连接不上, redis连接失败, 数据库语法错误等内部代码逻辑错误时返回
 func SystemError() string {

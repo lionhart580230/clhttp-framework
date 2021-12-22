@@ -369,6 +369,5 @@ func CallHandler(_name string, _param *rule.HttpParam, _serconf *rule.ServerPara
 //@lastUpdate 2019-08-10
 //@comment 请求信息
 func Request(_name string, _param *rule.HttpParam, _server *rule.ServerParam) (string, string) {
-
-	return rule.CallRule(_name, _param, _server), "text/json"
+	return rule.CallRule(_name, _param, _server)
 }
