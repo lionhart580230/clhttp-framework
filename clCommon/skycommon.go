@@ -220,3 +220,16 @@ func GenUserUid() uint64 {
 }
 
 
+//@author xiaolan
+//@lastUpdate 2022-01-03
+//@comment 生成用户密码
+//@param _username 账号
+//@param _password 密码
+//@param _case true=大小写敏感,false=大小写不敏感
+func GenUserPassword(_username string, _password string, _case bool) string {
+	var str = fmt.Sprintf("%v:%v", _username, _password)
+	if _case {
+		str = strings.ToUpper(str)
+	}
+	return Md5([]byte(str))
+}

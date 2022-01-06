@@ -1,7 +1,6 @@
 package clCache
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/xiaolan580230/clUtil/clJson"
 	"github.com/xiaolan580230/clhttp-framework/clCrypt"
@@ -126,12 +125,7 @@ func GetCache(_key string) string {
 		if val == "" {
 			return ""
 		}
-		var cacheObj clCache
-		err := json.Unmarshal([]byte(val), &cacheObj)
-		if err != nil {
-			return ""
-		}
-		return string(clCrypt.Base64Decode(cacheObj.Data))
+		return string(clCrypt.Base64Decode(val))
 	} else {
 		val, exist := mMemoryCache[_key]
 		if !exist {

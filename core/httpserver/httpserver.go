@@ -73,7 +73,6 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	for key, val := range getData {
 		values[key] = val[0]
 	}
-	clLog.Debug("获取GET 参数: %+v", getData)
 
 	var rawData = ""
 	if strings.Contains(contentType, "text/json") || strings.Contains(contentType, "application/json") {
