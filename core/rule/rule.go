@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 
@@ -229,8 +230,12 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, str
 	}
 
 	// 调用回调函数，并返回结果
+	nowTime := time.Now()
 	respStr := ruleinfo.CallBack(authInfo, newParam, _server)
-
+	diffTime := time.Since(nowTime).Seconds()
+	if diffTime > 5 {
+		clLog.Info("接口:%v.%v 处理耗时(%0.2fs)过长!", _uri, acName, diffTime)
+	}
 	// 检查是否需要缓存
 	if ruleinfo.CacheExpire > 0 {
 		clCache.UpdateCacheSimple(cacheKey, respStr, uint32(ruleinfo.CacheExpire))

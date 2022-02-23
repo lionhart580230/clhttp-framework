@@ -24,6 +24,7 @@ type AuthInfo struct {
 var mAuthMap map[ uint64 ] *AuthInfo
 var mLocker sync.RWMutex
 var prefix = "U_INFO_"
+var mGetUserByDB func(_uid uint64) *AuthInfo
 
 func init() {
 	mAuthMap = make(map[ uint64 ] *AuthInfo)
@@ -32,6 +33,11 @@ func init() {
 // 设置用户登录缓存前缀
 func SetAuthPrefix(_prefix string) {
 	prefix = _prefix
+}
+
+// 设置通过数据库获取用户结构的回调
+func SetGetUserByDB(_func func(_uid uint64) *AuthInfo ) {
+	mGetUserByDB = _func
 }
 
 
@@ -71,25 +77,25 @@ func AddUser( _auth *AuthInfo) {
 
 // 加载所有用户数据
 func LoadUsers() {
-	mLocker.Lock()
-	defer mLocker.Unlock()
-
-	mAuthMap = make(map[uint64] *AuthInfo)
-
-	redis := clGlobal.GetRedis()
-
-	keys := redis.GetKeys(prefix + "*")
-	for _, ukey := range keys {
-		var data AuthInfo
-		var jsonStr = clCrypt.Base64Decode(redis.Get(ukey))
-		var err = json.Unmarshal(jsonStr, &data)
-		if err != nil {
-			clLog.Error("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
-			continue
-		}
-		//clLog.Error("成功加载用户: %v -> %v", data.Token, data.Uid)
-		mAuthMap[ data.Uid ] = &data
-	}
+	//mLocker.Lock()
+	//defer mLocker.Unlock()
+	//
+	//mAuthMap = make(map[uint64] *AuthInfo)
+	//
+	//redis := clGlobal.GetRedis()
+	//
+	//keys := redis.GetKeys(prefix + "*")
+	//for _, ukey := range keys {
+	//	var data AuthInfo
+	//	var jsonStr = clCrypt.Base64Decode(redis.Get(ukey))
+	//	var err = json.Unmarshal(jsonStr, &data)
+	//	if err != nil {
+	//		clLog.Error("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
+	//		continue
+	//	}
+	//	//clLog.Error("成功加载用户: %v -> %v", data.Token, data.Uid)
+	//	mAuthMap[ data.Uid ] = &data
+	//}
 }
 
 
@@ -135,26 +141,33 @@ func GetUser( _uid uint64 ) *AuthInfo {
 	if _uid == 0 {
 		return nil
 	}
+	var userObj *AuthInfo
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
 			var userCache = redis.Get(GetUserKey(_uid))
-			if userCache == "" {
-				return nil
+			if userCache != "" {
+				err := json.Unmarshal(clCrypt.Base64Decode(userCache), userObj)
+				if err != nil {
+					clLog.Error("获取反序列化用户缓存错误: %v", err)
+				}
 			}
-			var userObj AuthInfo
-			err := json.Unmarshal(clCrypt.Base64Decode(userCache), &userObj)
-			if err != nil {
-				return nil
-			}
-			return &userObj
 		}
+	} else {
+		mLocker.RLock()
+		defer mLocker.RUnlock()
+		userObj = mAuthMap[ _uid ]
+	}
+
+	if userObj == nil && mGetUserByDB != nil {
+		userObj = mGetUserByDB(_uid)
+	}
+
+	if userObj != nil && userObj.Uid != _uid {
 		return nil
 	}
 
-	mLocker.RLock()
-	defer mLocker.RUnlock()
-	return mAuthMap[ _uid ]
+	return userObj
 }
 
 

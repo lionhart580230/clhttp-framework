@@ -178,3 +178,9 @@ func DelCacheContains(_key string) {
 
 	}
 }
+
+
+// 移除接口缓存
+func DelApiCache() {
+
+}

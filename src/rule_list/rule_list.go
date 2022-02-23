@@ -17,6 +17,7 @@ func Init() {
 		Params: []rule.ParamInfo{
 			rule.NewParam("user", rule.PTYPE_ALL, true, ""),
 		},
+		Login: true,
 		CallBack: example.ApiExample,
 		CacheExpire: 180,
 	})

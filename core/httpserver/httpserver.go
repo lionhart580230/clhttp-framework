@@ -146,8 +146,13 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	if strings.HasPrefix(remoteip, "[::1]") {
 		remoteip = strings.ReplaceAll(remoteip, "[::1]", "127.0.0.1")
 	}
+	RemoteIpArr := strings.Split(remoteip, ":")
+	remoteIp := RemoteIpArr[0]
+	if len(RemoteIpArr) > 2 {
+		remoteIp = remoteip
+	}
 	var serObj = rule.ServerParam{
-		RemoteIP:   strings.Split(remoteip, ":")[0],
+		RemoteIP:   remoteIp,
 		RequestURI: rq.RequestURI,
 		Host:       rq.Host,
 		Method:     rq.Method,
