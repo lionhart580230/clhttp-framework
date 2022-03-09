@@ -113,6 +113,7 @@ func SaveUser(_auth *AuthInfo) {
 	if redis != nil {
 		var userData, err = json.Marshal(_auth)
 		if err != nil {
+			clLog.Error("序列化用户缓存错误: %v", err)
 			return
 		}
 		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode(string(userData)), 86400)
@@ -149,7 +150,7 @@ func GetUser( _uid uint64 ) *AuthInfo {
 			if userCache != "" {
 				err := json.Unmarshal(clCrypt.Base64Decode(userCache), userObj)
 				if err != nil {
-					clLog.Error("获取反序列化用户缓存错误: %v", err)
+					clLog.Error("获取反序列化用户缓存错误: %v -> %v", err)
 				}
 			}
 		}
