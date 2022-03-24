@@ -30,6 +30,14 @@ func StartServer(_listenPort uint32) {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", _listenPort), nil))
 }
 
+
+var uploadFileSizeLimit int64 = 1024 * 1024 * 300
+
+func SetUploadFileSizeLimit(_limit int64) {
+	uploadFileSizeLimit = _limit
+}
+
+
 //@author xiaolan
 //@lastUpdate 2019-08-09
 //@comment http请求主入口回调
@@ -103,6 +111,15 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 					values[key] = val[0]
 				}
 			}
+		}
+	} else if rq.Method == "GET" && len(requestURI) > 1 {
+		GetParams := strings.Split(requestURI[1], "&")
+		for _, paramItem := range GetParams {
+			params := strings.Split(paramItem, "=")
+			if len(params) < 2 {
+				continue
+			}
+			values[params[0]] = params[1]
 		}
 	} else {
 		rq.ParseMultipartForm(2 << 32)
@@ -229,7 +246,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	}
 
 	// 最大内存限制为10MB
-	rq.ParseMultipartForm(10 << 20)
+	rq.ParseMultipartForm( uploadFileSizeLimit )
 	clientfd, handler, err := rq.FormFile("uploadfile")
 	if err != nil {
 		clLog.Error("加载文件失败: %v", err)
@@ -297,7 +314,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	}
 
 
-	buffers := make([]byte, 10 << 20)
+	buffers := make([]byte, uploadFileSizeLimit)
 	lenOfBuffer, err := clientfd.Read(buffers)
 	if err != nil {
 		clLog.Error("读取文件内容失败: %v", err)
