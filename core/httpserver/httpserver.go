@@ -112,7 +112,16 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 				}
 			}
 		}
-	} else if rq.Method == "GET" && len(requestURI) > 1 {
+	} else if strings.Contains(contentType, "text/xml" ) {
+		var xmlBytes = make([]byte, 4096)
+		n, err := rq.Body.Read(xmlBytes)
+		if err != nil && err.Error() != "EOF"{
+			clLog.Error("读取json参数失败! 错误:%v", err)
+			rw.WriteHeader(502)
+			return
+		}
+		rawData = string(xmlBytes[:n])
+	}else if rq.Method == "GET" && len(requestURI) > 1 {
 		GetParams := strings.Split(requestURI[1], "&")
 		for _, paramItem := range GetParams {
 			params := strings.Split(paramItem, "=")
@@ -182,6 +191,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		Language:   myLang,
 		LangType:   clCommon.Uint32(myLang),
 		RawData:    rawData,
+		ContentType: rq.Header.Get("Content-Type"),
 	}
 	content, contentType := CallHandler(requestName, rqObj, &serObj)
 	if contentType == "" {
