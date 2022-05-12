@@ -30,6 +30,7 @@ type ServerParam struct {
 	Port       string			// 端口
 	Language   string			// 使用语言信息
 	LangType   uint32			// 使用语言信息
+	ContentType string			// 提交的方式
 	RawData string				// 原始数据
 }
 

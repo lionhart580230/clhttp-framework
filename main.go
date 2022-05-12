@@ -28,5 +28,6 @@ func main() {
 			ExtraData:  nil,
 		}
 	})
+	httpserver.SetUploadFileSizeLimit(1024 * 1024 * 300)
 	httpserver.StartServer(HTTPServerPort)
 }
