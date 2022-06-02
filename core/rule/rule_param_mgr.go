@@ -90,7 +90,7 @@ func init() {
 
 	// 日期
 	paramCheckers[PTYPE_DATE] = func(_param string) string {
-		match, err := regexp.Match(`^[0-9]{4}\-[01][0-9]\-[01][0-9]$`, []byte(_param))
+		match, err := regexp.Match(`^[0-9]{4}\-[01][0-9]\-[012][0-9]$`, []byte(_param))
 		if err != nil || !match {
 			return PARAM_CHECK_FAIED
 		}
@@ -108,7 +108,7 @@ func init() {
 
 	// 日期时间
 	paramCheckers[PTYPE_DATETIME] = func(_param string) string {
-		match, err := regexp.Match(`^[0-9]{4}\-[01][0-9]\-[01][0-9]\s[0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]$`, []byte(_param))
+		match, err := regexp.Match(`^[0-9]{4}\-[01][0-9]\-[012][0-9]\s[0-2][0-9]\:[0-5][0-9]\:[0-5][0-9]$`, []byte(_param))
 		if err != nil || !match {
 			return PARAM_CHECK_FAIED
 		}
