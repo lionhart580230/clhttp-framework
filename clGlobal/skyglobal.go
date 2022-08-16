@@ -1,6 +1,7 @@
 package clGlobal
 
 import (
+	"errors"
 	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clUtil/clMysql"
 	"github.com/xiaolan580230/clUtil/clRedis"
@@ -93,6 +94,17 @@ func GetMysql() *clMysql.DBPointer {
 	mMysql = db
 	return mMysql
 }
+
+
+// 获取事务连线
+func GetMysqlTx() (*clMysql.ClTranslate, error) {
+	db := GetMysql()
+	if db == nil {
+		return nil, errors.New("数据库连接失败")
+	}
+	return db.StartTrans()
+}
+
 
 
 // 获取mongodb连线
