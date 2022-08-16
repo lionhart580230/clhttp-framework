@@ -129,7 +129,7 @@ func DelUser( _auth *AuthInfo) {
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			redis.Del(_auth.Token)
+			redis.Del(GetUserKey(_auth.Uid))
 		}
 		return
 	}
@@ -184,6 +184,7 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 		this.Token = _token
 		AddUser(this)
 	} else {
+
 		DelUser(this)
 	}
 }
