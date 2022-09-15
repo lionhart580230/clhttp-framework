@@ -170,8 +170,10 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, str
 	if ruleinfo.Login {
 		if authInfo == nil || authInfo.Token != token || !authInfo.IsLogin {
 			if clGlobal.SkyConf.DebugRouter {
-				clLog.Debug("TOKEN: %v 登录状态失效!", token)
+				clLog.Debug("Uid: %v TOKEN: %v 登录状态无效!", uid, token)
 			}
+			clLog.Info("用户: [%v] %v 登录状态失效!", uid, token)
+
 			return clResponse.NotLogin(), ruleinfo.RespContent
 		}
 	} else {
@@ -207,6 +209,10 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, str
 
 	// 如果回调函数不存在
 	if ruleinfo.CallBack == nil {
+		if ruleinfo.RespContent != "" {
+			return ruleinfo.RespContent, ruleinfo.RespContent
+		}
+
 		if clGlobal.SkyConf.DebugRouter {
 			clLog.Error("AC[%v]回调函数为空!", acName)
 		}
@@ -243,7 +249,7 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, str
 	}
 
 	if clGlobal.SkyConf.DebugRouter {
-		clLog.Debug("[ACK][%s] %s", _server.RemoteIP, respStr)
+		clLog.Debug("[%s][%s] REQUEST: %s / RESPONSE: %s", acName, _server.RemoteIP, strings.Join(paramsKeys, "&"), respStr)
 	}
 
 	return respStr, ruleinfo.RespContent

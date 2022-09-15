@@ -142,7 +142,7 @@ func GetUser( _uid uint64 ) *AuthInfo {
 	if _uid == 0 {
 		return nil
 	}
-	var userObj = &AuthInfo{}
+	var userObj *AuthInfo = nil
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
@@ -156,8 +156,8 @@ func GetUser( _uid uint64 ) *AuthInfo {
 		}
 	} else {
 		mLocker.RLock()
-		defer mLocker.RUnlock()
 		userObj = mAuthMap[ _uid ]
+		mLocker.RUnlock()
 	}
 
 	if userObj == nil && mGetUserByDB != nil {
