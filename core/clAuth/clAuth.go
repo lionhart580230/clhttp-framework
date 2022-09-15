@@ -142,7 +142,7 @@ func GetUser( _uid uint64 ) *AuthInfo {
 	if _uid == 0 {
 		return nil
 	}
-	var userObj *AuthInfo = nil
+	var userObj = &AuthInfo{}
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
