@@ -15,6 +15,24 @@ import (
 
 
 var TempDirPath string
+// 是否启用上传测试页面
+var mEnableUploadTest = false
+// 是否启用上传文件
+var mEnableUploadFile = false
+
+
+// 启用上传测试页面的访问
+// 访问url为 http://your_domain/upload_test
+func SetEnableUploadTest(_enable bool) {
+	mEnableUploadTest = _enable
+}
+
+// 启用上传文件功能，启用后将允许前台上传文件到服务器上
+// 访问url为 http://your_domain/upload
+func SetEnableUploadFile(_enable bool) {
+	mEnableUploadFile = _enable
+}
+
 
 //@author xiaolan
 //@lastUpdate 2019-08-09
@@ -22,8 +40,12 @@ var TempDirPath string
 func StartServer(_listenPort uint32) {
 
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/upload_test", uploadFileHtml)
-	http.HandleFunc("/uploadFile", uploadFile)
+	if mEnableUploadTest {
+		http.HandleFunc("/upload_test", uploadFileHtml)
+	}
+	if mEnableUploadFile {
+		http.HandleFunc("/uploadFile", uploadFile)
+	}
 
 	tempDirPath, _ := ioutil.TempDir("__clhttp_tempfile__", "")
 	TempDirPath = tempDirPath
@@ -235,12 +257,6 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	// 跨域支持
 	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
 	rw.Header().Add("Access-Control-Allow-Headers", "*") 			  //header的类型
-
-	//if rq.Method != "POST" {
-	//	// 不是使用post的一律拒绝
-	//	rw.WriteHeader(502)
-	//	return
-	//}
 
 	if strings.ToUpper(rq.Method) == "OPTIONS" {
 		rw.WriteHeader(200)

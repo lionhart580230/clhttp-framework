@@ -18,6 +18,13 @@ func main() {
 
 	rule_list.Init()
 
+	clAuth.SetAuthPrefix("U_INFO")
+
+	// 关闭上传功能
+	httpserver.SetEnableUploadFile(false)
+	// 关闭上传调试页
+	httpserver.SetEnableUploadTest(false)
+
 	clLog.Info( "正在启动服务，端口: %v", HTTPServerPort)
 	clAuth.SetGetUserByDB(func(_uid uint64) *clAuth.AuthInfo {
 		return &clAuth.AuthInfo{

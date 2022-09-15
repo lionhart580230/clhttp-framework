@@ -15,7 +15,10 @@ func Init() {
 		Request: "request",
 		Name: "api_example",
 		Params: []rule.ParamInfo{
-			rule.NewParam("user", rule.PTYPE_ALL, true, ""),
+			// 参数名为id，它必须是整数，并且值范围必须在1到10之间
+			rule.NewIntParamRange("id", true, "1", 1, 10),
+			// 参数名为name, 它必须是字符串，并且这个字符串的长度必须为2到5之间
+			rule.NewStrParamRange("name", true, "", 2, 5),
 		},
 		Login: true,
 		CallBack: example.ApiExample,

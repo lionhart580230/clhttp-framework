@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"strconv"
 	"strings"
 )
@@ -182,4 +183,59 @@ func (this *HttpParam) GetBool(_key string, _default bool) bool {
 	}
 
 	return false
+}
+
+
+//@author xiaolan
+//@lastUpdate 2022-09-15
+//@comment 将参数根据指定字符切割后返回
+//@param _key 要获得的参数名称
+//@param _sep 进行分割的符号
+func (this *HttpParam) GetStrSplit(_key string, _sep string) []string {
+	val, exists := this.values[_key]
+	if !exists {
+		return []string{}
+	}
+
+	return strings.Split(val, _sep)
+}
+
+
+//@author xiaolan
+//@lastUpdate 2022-09-15
+//@comment 获取整数列表
+//@param _key 要获得的参数名称
+func (this *HttpParam) GetUint32Split(_key string) []uint32 {
+	val, exists := this.values[_key]
+	if !exists {
+		return []uint32{}
+	}
+
+	strArr := strings.Split(val, ",")
+	uint32Arr := make([]uint32, 0)
+	for _, strItem := range strArr {
+		uint32Arr = append(uint32Arr, clCommon.Uint32(strItem))
+	}
+
+	return uint32Arr
+}
+
+
+//@author xiaolan
+//@lastUpdate 2022-09-15
+//@comment 获取浮点数列表
+//@param _key 要获得的参数名称
+func (this *HttpParam) GetFloatSplit(_key string) []float64 {
+	val, exists := this.values[_key]
+	if !exists {
+		return []float64{}
+	}
+
+	strArr := strings.Split(val, ",")
+	float64Arr := make([]float64, 0)
+	for _, strItem := range strArr {
+		float64Arr = append(float64Arr, clCommon.Float64(strItem))
+	}
+
+	return float64Arr
 }
