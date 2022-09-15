@@ -9,6 +9,15 @@ import (
 
 func ApiExample(_auth *clAuth.AuthInfo, _param *rule.HttpParam, _server *rule.ServerParam) string {
 
+	//// 获取字符串列表数组
+	//strArr := _param.GetStrSplit("str_list", ",")
+	//
+	//// 获取整数列表数组
+	//numArr := _param.GetUint32Split("id_list")
+	//
+	//// 获取浮点数列表数组
+	//posArr := _param.GetFloatSplit("pos_list")
+
 	return clResponse.Success(_server)
 }
 
