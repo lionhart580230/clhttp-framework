@@ -5,6 +5,8 @@ import (
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
 	"github.com/xiaolan580230/clhttp-framework/core/httpserver"
+	"github.com/xiaolan580230/clhttp-framework/core/modelCreator"
+	"github.com/xiaolan580230/clhttp-framework/core/rule"
 	"github.com/xiaolan580230/clhttp-framework/src/rule_list"
 )
 
@@ -36,5 +38,12 @@ func main() {
 		}
 	})
 	httpserver.SetUploadFileSizeLimit(1024 * 1024 * 300)
+
+	// 根据路由配置表生成api文档
+	rule.ApiGeneral("./apis", "apis", "/request")
+
+	// 根据数据库中的配置生成模型
+	modelCreator.CreateAllModelFile("127.0.0.1", "root", "root", "testdb", "testModel")
+
 	httpserver.StartServer(HTTPServerPort)
 }
