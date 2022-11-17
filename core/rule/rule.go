@@ -35,6 +35,8 @@ type ServerParam struct {
 }
 
 
+
+
 //@author xiaolan
 //@lastUpdate 2019-08-10
 //@comment 路由规则定义
@@ -137,7 +139,7 @@ func DelApiCacheAll(_uri string, _acName string) {
 //@author xiaolan
 //@lastUpdate 2019-08-10
 //@comment 调用规则
-func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, string) {
+func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *HttpParam, _server *ServerParam) (string, string) {
 	ruleLocker.RLock()
 	defer ruleLocker.RUnlock()
 
@@ -236,13 +238,33 @@ func CallRule(_uri string, _param *HttpParam, _server *ServerParam) (string, str
 		}
 	}
 
-	// 调用回调函数，并返回结果
+	// 调用前置函数，并返回结果
+	var beforeParam = DoRequestBefore(_uri, &RequestBeforeParam{
+		Request:    rq,
+		AcName:     acName,
+		ServerInfo: _server,
+		UserInfo:   authInfo,
+		Param:      _param,
+	})
+
 	nowTime := time.Now()
-	respStr := ruleinfo.CallBack(authInfo, newParam, _server)
+	respStr := ruleinfo.CallBack(beforeParam.UserInfo, beforeParam.Param, beforeParam.ServerInfo)
 	diffTime := time.Since(nowTime).Seconds()
 	if diffTime > 5 {
 		clLog.Info("接口:%v.%v 处理耗时(%0.2fs)过长!", _uri, acName, diffTime)
 	}
+
+	afterResp := DoRequestAfter(_uri, &RequestAfterParam{
+		Request:    rq,
+		AcName:     acName,
+		ServerInfo: _server,
+		UserInfo:   authInfo,
+		Param:      _param,
+		ResponseText:   respStr,
+		ResponseWriter: rw,
+	})
+	respStr = afterResp.ResponseText
+
 	// 检查是否需要缓存
 	if ruleinfo.CacheExpire > 0 {
 		clCache.UpdateCacheSimple(cacheKey, respStr, uint32(ruleinfo.CacheExpire))
