@@ -215,7 +215,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		RawData:    rawData,
 		ContentType: rq.Header.Get("Content-Type"),
 	}
-	content, contentType := CallHandler(requestName, rqObj, &serObj)
+	content, contentType := CallHandler(rq, &rw, requestName, rqObj, &serObj)
 	if contentType == "" {
 		contentType = "text/json"
 	}
@@ -283,24 +283,6 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 
 	fileNameArr := strings.Split(handler.Filename, ".")
 	fileExt := fileNameArr[len(fileNameArr)-1]
-
-	//// 需要过滤的请求文件类型列表
-	//filter_file_ext := []string {
-	//	"png", "jpg", "gif", "jpeg",
-	//}
-	//
-	//// 过滤请求
-	//isPass := false
-	//for _, filter_ext := range filter_file_ext {
-	//	if filter_ext == strings.ToLower(fileExt) {
-	//		isPass = true
-	//	}
-	//}
-	//
-	//if !isPass {
-	//	rw.WriteHeader(501)
-	//	return
-	//}
 
 	request_url := ""
 	proctol := rq.Header.Get("Proxy-X-Forwarded-Proto")
@@ -379,7 +361,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 		"localPath": os.TempDir() + fileName,  // 本地路径
 	})
 
-	content, contentType := CallHandler("upload", rqObj, &serObj)
+	content, contentType := CallHandler(rq, &rw,"upload", rqObj, &serObj)
 	if contentType == "" {
 		contentType = "text/json"
 	}
@@ -412,16 +394,6 @@ func UAToInt(_ua string) uint32 {
 //@param _name 回调函数名称
 //@param _param 参数列表
 //@param _serconf 服务器信息
-func CallHandler(_name string, _param *rule.HttpParam, _serconf *rule.ServerParam) (string, string) {
-
-	return Request(_name, _param, _serconf)
-}
-
-
-
-//@author xiaolan
-//@lastUpdate 2019-08-10
-//@comment 请求信息
-func Request(_name string, _param *rule.HttpParam, _server *rule.ServerParam) (string, string) {
-	return rule.CallRule(_name, _param, _server)
+func CallHandler(rq *http.Request, rw *http.ResponseWriter, _name string, _param *rule.HttpParam, _serconf *rule.ServerParam) (string, string) {
+	return rule.CallRule(rq, rw, _name, _param, _serconf)
 }
