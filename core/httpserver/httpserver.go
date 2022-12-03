@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clCrypt"
 	"github.com/xiaolan580230/clUtil/clJson"
 	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
@@ -19,7 +20,8 @@ var TempDirPath string
 var mEnableUploadTest = false
 // 是否启用上传文件
 var mEnableUploadFile = false
-
+// 设置AES 密钥
+var mAesKey = ""
 
 // 启用上传测试页面的访问
 // 访问url为 http://your_domain/upload_test
@@ -31,6 +33,11 @@ func SetEnableUploadTest(_enable bool) {
 // 访问url为 http://your_domain/upload
 func SetEnableUploadFile(_enable bool) {
 	mEnableUploadFile = _enable
+}
+
+// 设置解密密钥
+func SetAESKey(_aesKey string) {
+	mAesKey = _aesKey
 }
 
 
@@ -96,6 +103,9 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		}
 	}
 
+	var isEncrypt = rq.Header.Get("Encrypt-Type") == "AES"
+	var iv = rq.Header.Get("Encrypt-iv")
+
 	var contentType = strings.ToLower(rq.Header.Get("Content-Type"))
 	var values = make(map[string]string)
 
@@ -106,14 +116,23 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 
 	var rawData = ""
 	if strings.Contains(contentType, "text/json") || strings.Contains(contentType, "application/json") {
-		var jsonBytes = make([]byte, 4096)
+		var jsonBytes = make([]byte, 10 * 1024)
 		n, err := rq.Body.Read(jsonBytes)
 		if err != nil && err.Error() != "EOF"{
 			clLog.Error("读取json参数失败! 错误:%v", err)
 			rw.WriteHeader(502)
 			return
 		}
-		jsonObj := clJson.New(jsonBytes[:n])
+		var jsonStr = jsonBytes[:n]
+		if isEncrypt {
+			jsonStr = []byte( clCrypt.AesCBCDecode(jsonStr, []byte(mAesKey), []byte(iv)) )
+		}
+		if jsonStr == nil || len(jsonStr) == 0 {
+			clLog.Error("数据: %v 解密失败!!", string(jsonStr))
+			rw.WriteHeader(502)
+			return
+		}
+		jsonObj := clJson.New( jsonStr )
 		if jsonObj != nil {
 			values = jsonObj.ToMap().ToCustom()
 		}
@@ -200,20 +219,24 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		remoteIp = remoteip
 	}
 	var serObj = rule.ServerParam{
-		RemoteIP:   remoteIp,
-		RequestURI: rq.RequestURI,
-		Host:       rq.Host,
-		Method:     rq.Method,
-		Header:     rq.Header,
-		RequestURL: request_url,
-		UA:         myUA,
-		UAType:     UAToInt(myUA),
-		Proctol:    proctol,
-		Port:       "",
-		Language:   myLang,
-		LangType:   clCommon.Uint32(myLang),
-		RawData:    rawData,
+		RemoteIP:    remoteIp,
+		RequestURI:  rq.RequestURI,
+		Host:        rq.Host,
+		Method:      rq.Method,
+		Header:      rq.Header,
+		RequestURL:  request_url,
+		UA:          myUA,
+		UAType:      UAToInt(myUA),
+		Proctol:     proctol,
+		Port:        "",
+		Language:    myLang,
+		LangType:    clCommon.Uint32(myLang),
 		ContentType: rq.Header.Get("Content-Type"),
+		RawData:     rawData,
+		RawParam:    rqObj,		// 原始参数
+		Encrypt:     isEncrypt,	// 是否加密
+		AesKey:      mAesKey,
+		Iv:          iv,
 	}
 	content, contentType := CallHandler(rq, &rw, requestName, rqObj, &serObj)
 	if contentType == "" {
