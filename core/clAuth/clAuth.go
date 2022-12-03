@@ -3,8 +3,8 @@ package clAuth
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clCrypt"
 	"github.com/xiaolan580230/clUtil/clLog"
-	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"sync"
 	"time"
@@ -116,7 +116,7 @@ func SaveUser(_auth *AuthInfo) {
 			clLog.Error("序列化用户缓存错误: %v", err)
 			return
 		}
-		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode(string(userData)), 86400)
+		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode( userData ), 86400)
 	}
 }
 

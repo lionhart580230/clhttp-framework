@@ -2,8 +2,8 @@ package clCache
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clCrypt"
 	"github.com/xiaolan580230/clUtil/clJson"
-	"github.com/xiaolan580230/clhttp-framework/clCrypt"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
 	"reflect"
 	"strings"
@@ -33,7 +33,7 @@ func UpdateCacheSimple(_key string, _obj interface{}, _expire uint32) {
 	defer mLocker.Unlock()
 
 	var jsonStr = fmt.Sprintf("%v", _obj)
-	var data = clCrypt.Base64Encode( jsonStr )
+	var data = clCrypt.Base64Encode( []byte( jsonStr ) )
 	var cacheObj = clCache{
 		Data:   data,
 		Expire: uint32(time.Now().Unix()) + _expire,
@@ -63,7 +63,7 @@ func UpdateCache(_key string, _obj interface{}, _expire uint32) {
 		jsonStr = clJson.CreateBy(_obj).ToStr()
 	}
 
-	var data = clCrypt.Base64Encode( jsonStr )
+	var data = clCrypt.Base64Encode( []byte( jsonStr ) )
 	var cacheObj = clCache{
 		Data:   data,
 		Expire: uint32(time.Now().Unix()) + _expire,

@@ -22,6 +22,7 @@ func main() {
 
 	clAuth.SetAuthPrefix("U_INFO")
 
+	httpserver.SetAESKey("5d41402abc4b2a76b9719d911017c592")
 	// 关闭上传功能
 	httpserver.SetEnableUploadFile(false)
 	// 关闭上传调试页

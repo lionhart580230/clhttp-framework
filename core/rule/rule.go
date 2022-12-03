@@ -2,6 +2,7 @@ package rule
 
 import (
 	"fmt"
+	"github.com/xiaolan580230/clUtil/clCrypt"
 	"github.com/xiaolan580230/clUtil/clLog"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"github.com/xiaolan580230/clhttp-framework/clGlobal"
@@ -32,6 +33,10 @@ type ServerParam struct {
 	LangType   uint32			// 使用语言信息
 	ContentType string			// 提交的方式
 	RawData string				// 原始数据
+	RawParam *HttpParam			// 原始的参数
+	Encrypt bool				// 是否需要加密
+	AesKey string				// 加密用的key
+	Iv string 					// 加密用的iv
 }
 
 
@@ -152,7 +157,11 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		if clGlobal.SkyConf.DebugRouter {
 			clLog.Error( "AC <%v_%v> 不存在! IP: %v", _uri, acName, _server.RemoteIP)
 		}
-		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil), "text/json"
+		respStr := clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
+		if _server.Encrypt {
+			respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
+		}
+		return respStr, "text/json"
 	}
 
 	if ruleinfo.RespContent == "" {
@@ -176,7 +185,11 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 			}
 			clLog.Info("用户: [%v] %v 登录状态失效!", uid, token)
 
-			return clResponse.NotLogin(), ruleinfo.RespContent
+			respStr := clResponse.NotLogin()
+			if _server.Encrypt {
+				respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
+			}
+			return respStr, ruleinfo.RespContent
 		}
 	} else {
 		authInfo = clAuth.NewUser(0, "")
@@ -218,7 +231,11 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		if clGlobal.SkyConf.DebugRouter {
 			clLog.Error("AC[%v]回调函数为空!", acName)
 		}
-		return clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil), "text/json"
+		respStr := clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
+		if _server.Encrypt {
+			respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
+		}
+		return respStr, "text/json"
 	}
 
 	// 检查是否需要缓存
@@ -232,6 +249,9 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 			paramsKeys = append(paramsKeys, "ip=" + _server.RemoteIP)
 		}
 		cacheKey = _uri + "_" + acName + "_" + BuildCacheKey(paramsKeys)
+		if _server.Encrypt {	// 如果是加密的话，需要带上Iv
+			cacheKey += _server.Iv
+		}
 		cacheStr := clCache.GetCache(cacheKey)
 		if cacheStr != "" {
 			return cacheStr, ruleinfo.RespContent
@@ -263,7 +283,13 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		ResponseText:   respStr,
 		ResponseWriter: rw,
 	})
+
 	respStr = afterResp.ResponseText
+	// 需要加密
+	if _server.Encrypt {
+		respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
+		clLog.Info("需要加密~~: %v", respStr)
+	}
 
 	// 检查是否需要缓存
 	if ruleinfo.CacheExpire > 0 {
