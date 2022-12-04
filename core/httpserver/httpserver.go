@@ -75,6 +75,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	// 跨域支持
 	rw.Header().Set("Access-Control-Allow-Origin", "*")             //允许访问所有域
 	rw.Header().Add("Access-Control-Allow-Headers", "*") 			//header的类型
+	rw.Header().Set("Access-Control-Expose-Headers", "Encrypt-Type,Encrypt-iv")
 
 	// 需要过滤的请求文件类型列表
 	filter_file_ext := []string{
@@ -248,6 +249,10 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		return
 	}
 
+	if isEncrypt {
+		rw.Header().Set("Encrypt-Type", "AES")
+		rw.Header().Set("Encrypt-iv", iv)
+	}
 	rw.Header().Set("Content-Type", contentType)
 	rw.Header().Set("Charset", "UTF-8")
 	rw.Write([]byte(content))
