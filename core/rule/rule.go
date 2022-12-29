@@ -21,6 +21,7 @@ import (
 type ServerParam struct {
 	RemoteIP   string			// 远程IP地址
 	RequestURI string			// 请求URI
+	UriData   *HttpParam		// uri上的参数列表
 	Host       string			// 请求域名
 	Method     string			// 请求方法
 	Header     http.Header
@@ -219,6 +220,11 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 			}
 			newParam.Add(pinfo.Name, value)
 			paramsKeys = append(paramsKeys, pinfo.Name + "=" + value)
+		}
+	} else {
+		// 如果路由配置上参数列表为nil，那么就不过滤参数，所有参数都接收
+		for key, val := range _param.values {
+			newParam.Add(key, val)
 		}
 	}
 

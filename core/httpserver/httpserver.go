@@ -111,9 +111,12 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	var values = make(map[string]string)
 
 	getData := rq.URL.Query()
+	var uriValues = make(map[string]string)
 	for key, val := range getData {
+		uriValues[key] = val[0]
 		values[key] = val[0]
 	}
+
 
 	var rawData = ""
 	if strings.Contains(contentType, "text/json") || strings.Contains(contentType, "application/json") {
@@ -135,7 +138,12 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		}
 		jsonObj := clJson.New( jsonStr )
 		if jsonObj != nil {
-			values = jsonObj.ToMap().ToCustom()
+			{
+				jsonMap := jsonObj.ToMap().ToCustom()
+				for k, v := range jsonMap {
+					values[k] = v
+				}
+			}
 		}
 		rawData = string(jsonBytes[:n])
 	} else if strings.Contains(contentType, "multipart/form-data") || strings.Contains(contentType, "application/x-www-form-urlencoded") {
@@ -219,9 +227,11 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	if len(RemoteIpArr) > 2 {
 		remoteIp = remoteip
 	}
+
 	var serObj = rule.ServerParam{
 		RemoteIP:    remoteIp,
 		RequestURI:  rq.RequestURI,
+		UriData:     rule.NewHttpParam(uriValues),
 		Host:        rq.Host,
 		Method:      rq.Method,
 		Header:      rq.Header,
@@ -234,8 +244,8 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		LangType:    clCommon.Uint32(myLang),
 		ContentType: rq.Header.Get("Content-Type"),
 		RawData:     rawData,
-		RawParam:    rqObj,		// 原始参数
-		Encrypt:     isEncrypt,	// 是否加密
+		RawParam:    rqObj,     // 原始参数
+		Encrypt:     isEncrypt, // 是否加密
 		AesKey:      mAesKey,
 		Iv:          iv,
 	}
