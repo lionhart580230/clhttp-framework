@@ -228,6 +228,16 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		remoteIp = remoteip
 	}
 
+	// 获取header
+	headerAuthorization := rq.Header.Get("Authorization")
+	if headerAuthorization != "" {
+		authorArr := strings.Split(headerAuthorization, ":")
+		if len(authorArr) == 2 {
+			rqObj.Add("uid", authorArr[0])
+			rqObj.Add("token", authorArr[1])
+		}
+	}
+
 	var serObj = rule.ServerParam{
 		RemoteIP:    remoteIp,
 		RequestURI:  rq.RequestURI,
