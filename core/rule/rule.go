@@ -294,7 +294,6 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	// 需要加密
 	if _server.Encrypt {
 		respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
-		clLog.Info("需要加密~~: %v", respStr)
 	}
 
 	// 检查是否需要缓存
