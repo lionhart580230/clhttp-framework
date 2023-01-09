@@ -116,7 +116,7 @@ func SaveUser(_auth *AuthInfo) {
 			clLog.Error("序列化用户缓存错误: %v", err)
 			return
 		}
-		redis.Set(GetUserKey(_auth.Uid), clCrypt.Base64Encode( userData ), 86400)
+		redis.SetEx(GetUserKey(_auth.Uid), clCrypt.Base64Encode( userData ), 3600)
 	}
 }
 
@@ -146,13 +146,15 @@ func GetUser( _uid uint64 ) *AuthInfo {
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			var userCache = redis.Get(GetUserKey(_uid))
+			var userKey = GetUserKey(_uid)
+			var userCache = redis.Get(userKey)
 			if userCache != "" {
 				err := json.Unmarshal(clCrypt.Base64Decode(userCache), userObj)
 				if err != nil {
 					clLog.Error("获取反序列化用户缓存错误: %v -> %v", err)
 				}
 			}
+			redis.SetExpire(userKey, 3600)
 		}
 	} else {
 		mLocker.RLock()
@@ -184,7 +186,6 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 		this.Token = _token
 		AddUser(this)
 	} else {
-
 		DelUser(this)
 	}
 }
