@@ -157,6 +157,7 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	if !exists {
 		if clGlobal.SkyConf.DebugRouter {
 			clLog.Error( "AC <%v_%v> 不存在! IP: %v", _uri, acName, _server.RemoteIP)
+			clLog.Debug("%+v", ruleList)
 		}
 		respStr := clResponse.JCode(skylang.MSG_ERR_FAILED_INT, "模块不存在!", nil)
 		if _server.Encrypt {

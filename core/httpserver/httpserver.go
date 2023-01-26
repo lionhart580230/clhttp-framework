@@ -121,6 +121,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 	var rawData = ""
 	if strings.Contains(contentType, "text/json") || strings.Contains(contentType, "application/json") {
 		var jsonBytes = make([]byte, 10 * 1024)
+
 		n, err := rq.Body.Read(jsonBytes)
 		if err != nil && err.Error() != "EOF"{
 			clLog.Error("读取json参数失败! 错误:%v", err)
@@ -132,7 +133,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			jsonStr = []byte( clCrypt.AesCBCDecode(jsonStr, []byte(mAesKey), []byte(iv)) )
 		}
 		if jsonStr == nil || len(jsonStr) == 0 {
-			clLog.Error("数据: %v 解密失败!!", string(jsonStr))
+			clLog.Error("数据: %v 结构化失败! 加密:%v 长度:%v", string(jsonStr), isEncrypt, n)
 			rw.WriteHeader(502)
 			return
 		}
