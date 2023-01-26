@@ -22,6 +22,10 @@ type SkyConfig struct {
 	MysqlUser string
 	MysqlPass string
 
+	MysqlMaxConnections uint32		// 数据库最大连接数
+	MysqlIdleConnections uint32		// 数据库最小连接数
+	MysqlIdleLifeTime uint32		// 空闲连接的存活时间
+
 	RedisHost    string
 	RedisPrefix  string
 	RedisPass    string
@@ -51,6 +55,10 @@ func Init(_filename string) {
 	conf.GetStr("mysql", "mysql_name", "", &SkyConf.MysqlName)
 	conf.GetStr("mysql", "mysql_user", "", &SkyConf.MysqlUser)
 	conf.GetStr("mysql", "mysql_pass", "", &SkyConf.MysqlPass)
+	conf.GetUint32("mysql", "max_connections", 30, &SkyConf.MysqlMaxConnections)
+	conf.GetUint32("mysql", "idle_connections", 10, &SkyConf.MysqlIdleConnections)
+	conf.GetUint32("mysql", "max_life_sec", 3600*4, &SkyConf.MysqlIdleLifeTime)
+
 
 	conf.GetStr("redis", "redis_host", "", &SkyConf.RedisHost)
 	conf.GetStr("redis", "redis_prefix", "", &SkyConf.RedisPrefix)
@@ -87,7 +95,11 @@ func GetMysql() *clMysql.DBPointer {
 		return mMysql
 	}
 
-	db, err := clMysql.NewDB(SkyConf.MysqlHost, SkyConf.MysqlUser, SkyConf.MysqlPass, SkyConf.MysqlName)
+	db, err := clMysql.NewWithOpt(SkyConf.MysqlHost, SkyConf.MysqlUser, SkyConf.MysqlPass, SkyConf.MysqlName, clMysql.DBOpitions{
+		MaxConnection:  SkyConf.MysqlMaxConnections,
+		IdleConnection: SkyConf.MysqlIdleConnections,
+		MaxLifeTime:    SkyConf.MysqlIdleLifeTime,
+	})
 	if err != nil {
 		return nil
 	}
