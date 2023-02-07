@@ -101,11 +101,14 @@ func GetMysql() *clMysql.DBPointer {
 		MaxLifeTime:    SkyConf.MysqlIdleLifeTime,
 	})
 	if err != nil {
+		clLog.Error("连接数据库错误: %v", err)
+		clLog.Error("Host: %v User: %v Pass: %v", SkyConf.MysqlHost, SkyConf.MysqlUser, SkyConf.MysqlPass)
 		return nil
 	}
 	mMysql = db
 	return mMysql
 }
+
 
 
 // 获取事务连线

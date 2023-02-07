@@ -116,7 +116,7 @@ func SaveUser(_auth *AuthInfo) {
 			clLog.Error("序列化用户缓存错误: %v", err)
 			return
 		}
-		redis.SetEx(GetUserKey(_auth.Uid), clCrypt.Base64Encode( userData ), 3600)
+		redis.SetEx(GetUserKey(_auth.Uid), clCrypt.Base64Encode( userData ), 12 * 3600)
 	}
 }
 
