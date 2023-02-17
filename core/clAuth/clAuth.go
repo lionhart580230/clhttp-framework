@@ -18,6 +18,7 @@ type AuthInfo struct {
 	LastUptime uint32			// 最近活跃时间
 	IsLogin bool				// 是否登录
 	ExtraData map[string]string	// 附属数据
+	SessionKey string			// sessionkey
 	mLocker sync.RWMutex		// 异步锁
 }
 
@@ -151,10 +152,11 @@ func GetUser( _uid uint64 ) *AuthInfo {
 			if userCache != "" {
 				err := json.Unmarshal(clCrypt.Base64Decode(userCache), userObj)
 				if err != nil {
-					clLog.Error("获取反序列化用户缓存错误: %v -> %v", err)
+					clLog.Error("获取反序列化用户缓存错误: %v -> %v", userCache, err)
+				} else {
+					redis.SetExpire(userKey, 3600)
 				}
 			}
-			redis.SetExpire(userKey, 3600)
 		}
 	} else {
 		mLocker.RLock()
@@ -184,6 +186,21 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 		this.IsLogin = true
 		this.Uid = _uid
 		this.Token = _token
+		AddUser(this)
+	} else {
+		DelUser(this)
+	}
+}
+
+// 设置登录
+// 如果设置为登录中状态则 uid必须>0
+// 如果没有则自动切换为离线状态
+func (this *AuthInfo) SetLoginEx(_uid uint64, _token, _sessionKey string) {
+	if _uid > 0 && _token != "" {
+		this.IsLogin = true
+		this.Uid = _uid
+		this.Token = _token
+		this.SessionKey = _sessionKey
 		AddUser(this)
 	} else {
 		DelUser(this)

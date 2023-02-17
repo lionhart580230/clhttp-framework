@@ -1,6 +1,9 @@
 package clResponse
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/xiaolan580230/clUtil/clJson"
+)
 
 
 
@@ -80,8 +83,22 @@ func ServerError() string {
 func NotLogin() string {
 	resp, _ := json.Marshal(SkyResp{
 		Code: 40000,
-		Msg: "请先登录",
-		Data: nil,
+		Msg: "您还未登录或者登录状态已经失效",
+		Data: clJson.M {
+			"type": 0,
+		},
+	})
+	return string(resp)
+}
+
+// 需要登录的接口
+func LogoutByKick() string {
+	resp, _ := json.Marshal(SkyResp{
+		Code: 40000,
+		Msg: "您的账号已经在其他设备登录",
+		Data: clJson.M {
+			"type": 1,
+		},
 	})
 	return string(resp)
 }
