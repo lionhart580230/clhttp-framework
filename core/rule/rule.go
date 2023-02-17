@@ -173,6 +173,7 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	var authInfo *clAuth.AuthInfo
 	var token = _param.GetStr("token", "")
 	var uid  = _param.GetUint64("uid", 0)
+	var sessionKey = _param.GetStr("session_key", "")
 	if uid > 0 && token != "" {
 		authInfo = clAuth.GetUser(uid)
 	}
@@ -181,18 +182,46 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 
 	// 需要登录
 	if ruleinfo.Login {
-		if authInfo == nil || authInfo.Token != token || !authInfo.IsLogin {
-			if clGlobal.SkyConf.DebugRouter {
-				clLog.Debug("Uid: %v TOKEN: %v 登录状态无效!", uid, token)
-			}
-			clLog.Info("用户: [%v] %v 登录状态失效!", uid, token)
+		respStr := ""
+		if authInfo == nil || !authInfo.IsLogin {
+			// 失效了
+			respStr = clResponse.NotLogin()
+		} else if authInfo.Token != token {
 
-			respStr := clResponse.NotLogin()
+			// 被其他人顶出, 或者是失效
+			if sessionKey == "" {
+				if authInfo.LastUptime > uint32(time.Now().Unix()) - 600 {
+					respStr = clResponse.LogoutByKick()
+				} else {
+					respStr = clResponse.NotLogin()
+				}
+			} else {
+				if authInfo.SessionKey != sessionKey {
+					respStr = clResponse.LogoutByKick()
+				} else {
+					respStr = clResponse.NotLogin()
+				}
+			}
+
+
+		}
+		if respStr != "" {
 			if _server.Encrypt {
 				respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
 			}
 			return respStr, ruleinfo.RespContent
 		}
+
+		//if authInfo == nil || authInfo.Token != token || !authInfo.IsLogin {
+		//	if clGlobal.SkyConf.DebugRouter {
+		//		clLog.Debug("Uid: %v TOKEN: %v 登录状态无效!", uid, token)
+		//	}
+		//	clLog.Info("用户: [%v] %v 登录状态失效!", uid, token)
+		//
+		//
+		//
+		//
+		//}
 	} else {
 		authInfo = clAuth.NewUser(0, "")
 	}
