@@ -1,6 +1,7 @@
 package rule
 
 import (
+	"github.com/xiaolan580230/clUtil/clJson"
 	"github.com/xiaolan580230/clhttp-framework/clCommon"
 	"strconv"
 	"strings"
@@ -238,4 +239,20 @@ func (this *HttpParam) GetFloatSplit(_key string) []float64 {
 	}
 
 	return float64Arr
+}
+
+
+//@author xiaolan
+//@lastUpdate 2023-02-23
+//@comment 返回所有的参数
+func (this *HttpParam) ToMap() map[string]string {
+	return this.values
+}
+
+
+//@author xiaolan
+//@lastUpdate 2023-02-23
+//@comment 将所有参数以json字符串形式返回
+func (this *HttpParam) ToJson() string {
+	return clJson.CreateBy(this.values).ToStr()
 }
