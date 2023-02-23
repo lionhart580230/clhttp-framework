@@ -33,6 +33,9 @@ const (
 	PTYPE_ID_CARD     = 19 // 身份证号
 	PTYPE_INT_RANGE   = 20 // 整数范围
 	PTYPE_STR_RANGE   = 21 // 字符串长度
+	PTYPE_V2	      = 22 // 2维坐标系
+	PTYPE_V3		  = 23 // 3维坐标系
+	PTYPE_V4          = 24 // 4维坐标系
 )
 
 const (
@@ -264,6 +267,61 @@ func init() {
 			return _param
 		}
 		return PARAM_CHECK_FAIED
+	}
+
+	// 长度范围内的字符串
+	paramCheckers[PTYPE_V2] = func(_param string, _extra *ParamInfo) string {
+
+		params := strings.Split(_param, ",")
+		if len(params) != 2 {
+			return PARAM_CHECK_FAIED
+		}
+
+		for _, val := range params {
+			match, err := regexp.Match(`^(\-)?[0-9]{1,20}(\.[0-9]{1,10})?$`, []byte(val))
+			if err != nil || !match {
+				return PARAM_CHECK_FAIED
+			}
+		}
+
+		return _param
+	}
+
+
+	// 长度范围内的字符串
+	paramCheckers[PTYPE_V3] = func(_param string, _extra *ParamInfo) string {
+
+		params := strings.Split(_param, ",")
+		if len(params) != 3 {
+			return PARAM_CHECK_FAIED
+		}
+
+		for _, val := range params {
+			match, err := regexp.Match(`^(\-)?[0-9]{1,20}(\.[0-9]{1,10})?$`, []byte(val))
+			if err != nil || !match {
+				return PARAM_CHECK_FAIED
+			}
+		}
+
+		return _param
+	}
+
+	// 长度范围内的字符串
+	paramCheckers[PTYPE_V4] = func(_param string, _extra *ParamInfo) string {
+
+		params := strings.Split(_param, ",")
+		if len(params) != 4 {
+			return PARAM_CHECK_FAIED
+		}
+
+		for _, val := range params {
+			match, err := regexp.Match(`^(\-)?[0-9]{1,20}(\.[0-9]{1,10})?$`, []byte(val))
+			if err != nil || !match {
+				return PARAM_CHECK_FAIED
+			}
+		}
+
+		return _param
 	}
 
 
