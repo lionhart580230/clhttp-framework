@@ -390,6 +390,23 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 	localfd.Close()
 
 
+	var rqObj = rule.NewHttpParam(map[string] string{
+		"ac": "UploadFile",			// 执行的动作
+		"filename": fileName,		// 文件名
+		"fileExt": fileExt,			// 文件扩展名
+		"localPath": os.TempDir() + fileName,  // 本地路径
+	})
+
+	// 获取header
+	headerAuthorization := rq.Header.Get("Authorization")
+	if headerAuthorization != "" {
+		authorArr := strings.Split(headerAuthorization, ":")
+		if len(authorArr) == 2 {
+			rqObj.Add("uid", authorArr[0])
+			rqObj.Add("token", authorArr[1])
+		}
+	}
+	
 	var serObj = rule.ServerParam{
 		RemoteIP:   strings.Split(remoteip, ":")[0],
 		RequestURI: rq.RequestURI,
@@ -403,12 +420,7 @@ func uploadFile (rw http.ResponseWriter, rq *http.Request) {
 		Language:   "zh-cn",
 	}
 
-	var rqObj = rule.NewHttpParam(map[string] string{
-		"ac": "UploadFile",			// 执行的动作
-		"filename": fileName,		// 文件名
-		"fileExt": fileExt,			// 文件扩展名
-		"localPath": os.TempDir() + fileName,  // 本地路径
-	})
+
 
 	content, contentType := CallHandler(rq, &rw,"upload", rqObj, &serObj)
 	if contentType == "" {
