@@ -208,7 +208,7 @@ func (this *HttpParam) GetStrSplit(_key string, _sep string) []string {
 //@param _key 要获得的参数名称
 func (this *HttpParam) GetUint32Split(_key string) []uint32 {
 	val, exists := this.values[_key]
-	if !exists {
+	if !exists || val == "" {
 		return []uint32{}
 	}
 

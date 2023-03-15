@@ -26,7 +26,6 @@ func Init() {
 	})
 
 
-
 	// 范例: 注册账号接口
 	rule.AddRule(rule.Rule{
 		Request: "upload",
