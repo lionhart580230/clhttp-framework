@@ -307,7 +307,7 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	respStr := ruleinfo.CallBack(beforeParam.UserInfo, beforeParam.Param, beforeParam.ServerInfo)
 	diffTime := time.Since(nowTime).Seconds()
 	if diffTime > 5 {
-		clLog.Info("接口:%v.%v 处理耗时(%0.2fs)过长!", _uri, acName, diffTime)
+		clLog.Error("接口:%v.%v 处理耗时(%0.2fs)过长!", _uri, acName, diffTime)
 	}
 
 	afterResp := DoRequestAfter(_uri, &RequestAfterParam{
