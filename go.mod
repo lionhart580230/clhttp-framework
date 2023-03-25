@@ -4,6 +4,6 @@ go 1.12
 
 require (
 	github.com/onsi/gomega v1.12.0 // indirect
-	github.com/xiaolan580230/clUtil v1.2.6
+	github.com/xiaolan580230/clUtil v1.2.8
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
