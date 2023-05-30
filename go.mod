@@ -1,9 +1,9 @@
-module github.com/xiaolan580230/clhttp-framework
+module github.com/lionhart580230/clhttp-framework
 
 go 1.12
 
 require (
-	github.com/onsi/gomega v1.12.0 // indirect
-	github.com/xiaolan580230/clUtil v1.2.8
+	github.com/farmerx/gorsa v0.0.0-20161211100049-3ae06f674f40 // indirect
+	github.com/lionhart580230/clUtil v1.2.14
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

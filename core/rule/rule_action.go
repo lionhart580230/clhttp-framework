@@ -1,7 +1,7 @@
 package rule
 
 import (
-	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
+	"github.com/lionhart580230/clhttp-framework/core/clAuth"
 	"net/http"
 	"sync"
 )

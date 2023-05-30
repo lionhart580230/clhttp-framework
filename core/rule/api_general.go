@@ -3,21 +3,20 @@ package rule
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/xiaolan580230/clUtil/clFile"
-	"github.com/xiaolan580230/clUtil/clLog"
+	"github.com/lionhart580230/clUtil/clFile"
+	"github.com/lionhart580230/clUtil/clLog"
 	"io/ioutil"
 	"strings"
 )
 
-
 const ApiTemp = `package %v
 
 import (
-	"github.com/xiaolan580230/clUtil/clJson"
-	"github.com/xiaolan580230/clUtil/clLog"
-	"github.com/xiaolan580230/clhttp-framework/clResponse"
-	"github.com/xiaolan580230/clhttp-framework/core/clAuth"
-	"github.com/xiaolan580230/clhttp-framework/core/rule"
+	"github.com/lionhart580230/clUtil/clJson"
+	"github.com/lionhart580230/clUtil/clLog"
+	"github.com/lionhart580230/clhttp-framework/clResponse"
+	"github.com/lionhart580230/clhttp-framework/core/clAuth"
+	"github.com/lionhart580230/clhttp-framework/core/rule"
 	"strings"
 )
 
@@ -29,9 +28,8 @@ func %v(_auth *clAuth.AuthInfo, _param *rule.HttpParam, _server *rule.ServerPara
 	})
 }`
 
-
 // api文件生成器
-//@param _pathName 要生成在哪个目录
+// @param _pathName 要生成在哪个目录
 func ApiGeneral(_pathName string, _package, _request string) {
 
 	for _, val := range ruleList {
@@ -56,20 +54,20 @@ func ApiGeneral(_pathName string, _package, _request string) {
 }
 
 type GeneralParams struct {
-	Name string `json:"name"`
-	Strict bool `json:"strict"`
-	Type string `json:"type"`
+	Name    string `json:"name"`
+	Strict  bool   `json:"strict"`
+	Type    string `json:"type"`
 	Comment string `json:"comment"`
 }
 type GeneralRouterInfo struct {
-	Ac string `json:"ac"`
-	Comment string `json:"comment"`
-	Params []GeneralParams `json:"params"`
-	Login bool `json:"login"`
+	Ac      string          `json:"ac"`
+	Comment string          `json:"comment"`
+	Params  []GeneralParams `json:"params"`
+	Login   bool            `json:"login"`
 }
 
 // api文件根据json
-//@param _pathName 要生成在哪个目录
+// @param _pathName 要生成在哪个目录
 func ApiGeneralByJson(_jsonStr, _pathName string, _package, _request string, _file string) {
 
 	var data = make([]GeneralRouterInfo, 0)
@@ -94,7 +92,7 @@ func ApiGeneralByJson(_jsonStr, _pathName string, _package, _request string, _fi
 	rule.AddRule(rule.Rule{
 		Request:     "%v",
 		Name:        "%v",
-		Params:      []rule.ParamInfo{` +"\n" + `%v		},
+		Params:      []rule.ParamInfo{` + "\n" + `%v		},
 		CallBack:    %v,
 		CacheExpire: 0,
 		CacheType:   0,
@@ -108,7 +106,7 @@ func ApiGeneralByJson(_jsonStr, _pathName string, _package, _request string, _fi
 
 	ruleListContent.WriteString(`package rulelist
 
-import "github.com/xiaolan580230/clhttp-framework/core/rule"
+import "github.com/lionhart580230/clhttp-framework/core/rule"
 
 `)
 
@@ -143,7 +141,7 @@ import "github.com/xiaolan580230/clhttp-framework/core/rule"
 			comment = "// " + val.Comment
 		}
 
-		ruleBodyBuilder.WriteString(fmt.Sprintf(tempItem, comment, _request, val.Ac, paramsBuilder.String(), _package + "." + apiName, val.Login))
+		ruleBodyBuilder.WriteString(fmt.Sprintf(tempItem, comment, _request, val.Ac, paramsBuilder.String(), _package+"."+apiName, val.Login))
 
 		if err := ioutil.WriteFile(fileName, []byte(writeBuffer), 0666); err != nil {
 			clLog.Error("生成Api文件: %v 失败: %v", fileName, err)
@@ -154,6 +152,6 @@ import "github.com/xiaolan580230/clhttp-framework/core/rule"
 
 	ruleListContent.WriteString(fmt.Sprintf(tempFunc, ruleBodyBuilder.String()))
 	clFile.CreateDirIFNotExists("rulelist")
-	clFile.AppendFile("rulelist/" + _file + ".go", ruleListContent.String())
+	clFile.AppendFile("rulelist/"+_file+".go", ruleListContent.String())
 	clLog.Info("文件内容:\n\n %+v\n", ruleListContent.String())
 }

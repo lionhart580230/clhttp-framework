@@ -2,10 +2,10 @@ package modelCreator
 
 import (
 	"fmt"
-	"github.com/xiaolan580230/clUtil/clCommon"
-	"github.com/xiaolan580230/clUtil/clFile"
-	"github.com/xiaolan580230/clUtil/clLog"
-	"github.com/xiaolan580230/clUtil/clMysql"
+	"github.com/lionhart580230/clUtil/clCommon"
+	"github.com/lionhart580230/clUtil/clFile"
+	"github.com/lionhart580230/clUtil/clLog"
+	"github.com/lionhart580230/clUtil/clMysql"
 	"strings"
 )
 
@@ -15,9 +15,9 @@ const modelTemplatePackage = `package %v
 // 导入文件
 import (
 	"errors"
-	"github.com/xiaolan580230/clUtil/clLog"
-	"github.com/xiaolan580230/clUtil/clReflect"
-	"github.com/xiaolan580230/clhttp-framework/clGlobal"
+	"github.com/lionhart580230/clUtil/clLog"
+	"github.com/lionhart580230/clUtil/clReflect"
+	"github.com/lionhart580230/clhttp-framework/clGlobal"
 )
 `
 
@@ -69,12 +69,12 @@ func (this *Model) AddToDB() error {
 %v
 `
 
-//@auth ciaolan
-//@param _dbHost 数据库连线
-//@param _dbUser 数据库用户
-//@param _dbPass 数据库密码
-//@param _dbName 数据库名称
-//@param _path 数据库路径
+// @auth ciaolan
+// @param _dbHost 数据库连线
+// @param _dbUser 数据库用户
+// @param _dbPass 数据库密码
+// @param _dbName 数据库名称
+// @param _path 数据库路径
 func CreateAllModelFile(_dbHost, _dbUser, _dbPass, _dbName, _path string) {
 	DB, err := clMysql.NewDB(_dbHost, _dbUser, _dbPass, _dbName)
 	if err != nil {
@@ -100,7 +100,6 @@ func CreateAllModelFile(_dbHost, _dbUser, _dbPass, _dbName, _path string) {
 		CreateModelFile(_path, table, cols)
 	}
 }
-
 
 // 生成模型文件
 func CreateModelFile(_path string, _tableName string, _columns []clMysql.DBColumnInfo) {
@@ -160,9 +159,7 @@ func (this *Model)Set%v(_val %v) *Model {
 	fileContent.WriteString(fmt.Sprintf(modelTemplateModel, _tableName, pkString, structBody.String()))
 	fileContent.WriteString(fmt.Sprintf(modelTemplateFunction, pkType, setFunctions.String()))
 
-
-	clFile.AppendFile(_path + "/" + modelName + "/" + modelName + ".go", fileContent.String())
+	clFile.AppendFile(_path+"/"+modelName+"/"+modelName+".go", fileContent.String())
 
 	fmt.Printf(">> 模型文件生成完毕!!\n\n%v\n", fileContent.String())
 }
-
