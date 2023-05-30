@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-var paramCheckers map[uint32]func(/*_param*/string, /*extra*/*ParamInfo) string
+var paramCheckers map[uint32]func( /*_param*/ string /*extra*/, *ParamInfo) string
 
 // 参数检验规则类型定义
 const (
@@ -33,9 +33,10 @@ const (
 	PTYPE_ID_CARD     = 19 // 身份证号
 	PTYPE_INT_RANGE   = 20 // 整数范围
 	PTYPE_STR_RANGE   = 21 // 字符串长度
-	PTYPE_V2	      = 22 // 2维坐标系
-	PTYPE_V3		  = 23 // 3维坐标系
+	PTYPE_V2          = 22 // 2维坐标系
+	PTYPE_V3          = 23 // 3维坐标系
 	PTYPE_V4          = 24 // 4维坐标系
+	PTYPE_BOOL        = 25 // 布尔类型
 )
 
 const (
@@ -216,11 +217,11 @@ func init() {
 	// 身份证
 	paramCheckers[PTYPE_ID_CARD] = func(_param string, _extra *ParamInfo) string {
 		_IDRe18 := `/^([1-6][1-9]|50)\d{4}(18|19|20)\d{2}((0[1-9])|10|11|12)(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/`
-		_IDre15 :=  `/^([1-6][1-9]|50)\d{4}\d{2}((0[1-9])|10|11|12)(([0-2][1-9])|10|20|30|31)\d{3}$/`
+		_IDre15 := `/^([1-6][1-9]|50)\d{4}\d{2}((0[1-9])|10|11|12)(([0-2][1-9])|10|20|30|31)\d{3}$/`
 
 		match18, err18 := regexp.Match(_IDRe18, []byte(_param))
 		match15, err15 := regexp.Match(_IDre15, []byte(_param))
-		if err18 != nil  {
+		if err18 != nil {
 		}
 		// 校验身份证：
 		if (err18 == nil && match18) || (err15 == nil && match15) {
@@ -287,7 +288,6 @@ func init() {
 		return _param
 	}
 
-
 	// 长度范围内的字符串
 	paramCheckers[PTYPE_V3] = func(_param string, _extra *ParamInfo) string {
 
@@ -324,13 +324,23 @@ func init() {
 		return _param
 	}
 
+	// 布尔类型
+	paramCheckers[PTYPE_BOOL] = func(_param string, _extra *ParamInfo) string {
+
+		_param = strings.ToUpper(_param)
+		if _param != "TRUE" && _param != "FALSE" {
+			return PARAM_CHECK_FAIED
+		}
+
+		return _param
+	}
 
 }
 
-//@author xiaolan
-//@lastUpdate 2019-08-04
-//@comment 验证参数合法性
-//@param _param 参数值
+// @author xiaolan
+// @lastUpdate 2019-08-04
+// @comment 验证参数合法性
+// @param _param 参数值
 func (this *ParamInfo) CheckParam(_param string) bool {
 	checkFunc, exists := paramCheckers[this.ParamType]
 	if !exists {

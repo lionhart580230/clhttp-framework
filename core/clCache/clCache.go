@@ -12,20 +12,17 @@ import (
 )
 
 // 缓存管理器
-var mMemoryCache map[string] clCache
+var mMemoryCache map[string]clCache
 var mLocker sync.RWMutex
 
-
 type clCache struct {
-	Data string `json:"d"`
+	Data   string `json:"d"`
 	Expire uint32 `json:"e"`
 }
 
-
 func init() {
-	mMemoryCache = make(map[string] clCache)
+	mMemoryCache = make(map[string]clCache)
 }
-
 
 // 简单类型写入缓存
 func UpdateCacheSimple(_key string, _obj interface{}, _expire uint32) {
@@ -33,7 +30,7 @@ func UpdateCacheSimple(_key string, _obj interface{}, _expire uint32) {
 	defer mLocker.Unlock()
 
 	var jsonStr = fmt.Sprintf("%v", _obj)
-	var data = clCrypt.Base64Encode( []byte( jsonStr ) )
+	var data = clCrypt.Base64Encode([]byte(jsonStr))
 	var cacheObj = clCache{
 		Data:   data,
 		Expire: uint32(time.Now().Unix()) + _expire,
@@ -48,8 +45,6 @@ func UpdateCacheSimple(_key string, _obj interface{}, _expire uint32) {
 		mMemoryCache[_key] = cacheObj
 	}
 }
-
-
 
 // 写入缓存
 func UpdateCache(_key string, _obj interface{}, _expire uint32) {
@@ -63,7 +58,7 @@ func UpdateCache(_key string, _obj interface{}, _expire uint32) {
 		jsonStr = clJson.CreateBy(_obj).ToStr()
 	}
 
-	var data = clCrypt.Base64Encode( []byte( jsonStr ) )
+	var data = clCrypt.Base64Encode([]byte(jsonStr))
 	var cacheObj = clCache{
 		Data:   data,
 		Expire: uint32(time.Now().Unix()) + _expire,
@@ -78,8 +73,6 @@ func UpdateCache(_key string, _obj interface{}, _expire uint32) {
 		mMemoryCache[_key] = cacheObj
 	}
 }
-
-
 
 // 是否是简单类型
 func IsSimpleType(_val interface{}) bool {
@@ -106,9 +99,6 @@ func IsSimpleType(_val interface{}) bool {
 		return false
 	}
 }
-
-
-
 
 // 获取缓存
 func GetCache(_key string) string {
@@ -138,10 +128,8 @@ func GetCache(_key string) string {
 	}
 }
 
-
-
 // 删除缓存
-func DelCache(_key string){
+func DelCache(_key string) {
 	mLocker.Lock()
 	defer mLocker.Lock()
 
@@ -154,7 +142,6 @@ func DelCache(_key string){
 		delete(mMemoryCache, _key)
 	}
 }
-
 
 // 批量删除缓存
 func DelCacheContains(_key string) {
@@ -177,10 +164,4 @@ func DelCacheContains(_key string) {
 		}
 
 	}
-}
-
-
-// 移除接口缓存
-func DelApiCache() {
-
 }
