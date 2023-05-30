@@ -2,30 +2,28 @@ package model_real_list
 
 import (
 	"errors"
-	"github.com/xiaolan580230/clUtil/clLog"
-	"github.com/xiaolan580230/clUtil/clReflect"
-	"github.com/xiaolan580230/clhttp-framework/clGlobal"
+	"github.com/lionhart580230/clUtil/clLog"
+	"github.com/lionhart580230/clUtil/clReflect"
+	"github.com/lionhart580230/clhttp-framework/clGlobal"
 )
 
 const TableName = "real_list"
 const PK = "id"
 
 type Model struct {
-	Id uint32 `db:"id" primary:"true"`
+	Id       uint32 `db:"id" primary:"true"`
 	ParentId string `db:"parent_id"`
 	MenuName string `db:"menu_name"`
-	Url string `db:"url"`
+	Url      string `db:"url"`
 
-	changeFiled map[string] interface{}
+	changeFiled map[string]interface{}
 }
-
 
 func New() *Model {
 	return &Model{
-		changeFiled: make(map[string] interface{}),
+		changeFiled: make(map[string]interface{}),
 	}
 }
-
 
 // 保存
 func (this *Model) SaveToDB(_pkVal uint32) error {
@@ -69,37 +67,36 @@ func (this *Model) GetListByLimit(_page int32, _count int32) (*Model, error) {
 	return model, err
 }
 
-
 // 设置各自的值
-func (this *Model)SetId(_id uint32) *Model {
+func (this *Model) SetId(_id uint32) *Model {
 	this.Id = _id
 	this.changeFiled["id"] = _id
 	return this
 }
 
 // 设置各自的值
-func (this *Model)SetParent(_parent string) *Model {
+func (this *Model) SetParent(_parent string) *Model {
 	this.ParentId = _parent
 	this.changeFiled["parent_id"] = _parent
 	return this
 }
 
 // 设置menuname
-func (this *Model)SetMenuName(_menuName string) *Model {
+func (this *Model) SetMenuName(_menuName string) *Model {
 	this.MenuName = _menuName
 	this.changeFiled["menu_name"] = _menuName
 	return this
 }
 
 // 设置menuname
-func (this *Model)SetUrl(_url string) *Model {
+func (this *Model) SetUrl(_url string) *Model {
 	this.Url = _url
 	this.changeFiled["url"] = _url
 	return this
 }
 
 // 填充整个数据
-func (this *Model)FillData(_model Model) *Model {
+func (this *Model) FillData(_model Model) *Model {
 	this = &_model
 
 	this.changeFiled = clReflect.StructToMap(_model)

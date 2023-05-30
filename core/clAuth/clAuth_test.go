@@ -2,7 +2,7 @@ package clAuth
 
 import (
 	"fmt"
-	"github.com/xiaolan580230/clUtil/clJson"
+	"github.com/lionhart580230/clUtil/clJson"
 	"reflect"
 	"testing"
 )
