@@ -48,12 +48,13 @@ type Rule struct {
 	Name    string      // 规则名称
 	Params  []ParamInfo // 参数列表
 	// 回调函数
-	CallBack    func(_auth *clAuth.AuthInfo, _param *HttpParam, _server *ServerParam) string
-	CacheExpire int    // 缓存秒数, 负数为频率控制, 正数为缓存时间, 0为不缓存
-	CacheType   int    // 缓存启动的时候才有效 0=全局缓存,1=根据IP缓存,2=根据用户缓存
-	Login       bool   // 是否登录才可以访问这个接口
-	Method      string // 请求方法, 为空则不限制请求方法, POST则为只允许POST请求
-	RespContent string // 返回的结构体内容格式 默认是 text/json
+	CallBack      func(_auth *clAuth.AuthInfo, _param *HttpParam, _server *ServerParam) string
+	CacheExpire   int      // 缓存秒数, 负数为频率控制, 正数为缓存时间, 0为不缓存
+	CacheType     int      // 缓存启动的时候才有效 0=全局缓存,1=根据IP缓存,2=根据用户缓存
+	CacheKeyParam []string // 参与计算唯一性的参数名称列表
+	Login         bool     // 是否登录才可以访问这个接口
+	Method        string   // 请求方法, 为空则不限制请求方法, POST则为只允许POST请求
+	RespContent   string   // 返回的结构体内容格式 默认是 text/json
 }
 
 // 路由列表
@@ -165,7 +166,7 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	}
 
 	paramsKeys := make([]string, 0)
-
+	paramsKeys = append(paramsKeys, _uri+"_"+acName)
 	// 需要登录
 	if ruleinfo.Login {
 		respStr := ""
@@ -215,6 +216,9 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	newParam := NewHttpParam(nil)
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
+			if pinfo.Name == acKey {
+				continue
+			}
 			value := _param.GetStr(pinfo.Name, "")
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {
@@ -234,7 +238,21 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 				}
 			}
 			newParam.Add(pinfo.Name, value)
-			paramsKeys = append(paramsKeys, pinfo.Name+"="+value)
+			// 判断是否有需要自定义参与计算cacheKey的配置
+			if len(ruleinfo.CacheKeyParam) > 0 {
+				isExists := false // 判断当前key的名字是否在配置中
+				for _, val := range ruleinfo.CacheKeyParam {
+					if val == pinfo.Name {
+						isExists = true
+						break
+					}
+				}
+				if isExists {
+					paramsKeys = append(paramsKeys, value)
+				}
+			} else {
+				paramsKeys = append(paramsKeys, value)
+			}
 		}
 	} else {
 		// 如果路由配置上参数列表为nil，那么就不过滤参数，所有参数都接收
