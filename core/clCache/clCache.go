@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lionhart580230/clUtil/clCrypt"
 	"github.com/lionhart580230/clUtil/clJson"
+	"github.com/lionhart580230/clUtil/clTime"
 	"github.com/lionhart580230/clhttp-framework/clGlobal"
 	"reflect"
 	"strings"
@@ -145,9 +146,6 @@ func DelCache(_key string) {
 
 // 批量删除缓存
 func DelCacheContains(_key string) {
-	mLocker.Lock()
-	defer mLocker.Lock()
-
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
@@ -157,6 +155,10 @@ func DelCacheContains(_key string) {
 			}
 		}
 	} else {
+
+		mLocker.Lock()
+		defer mLocker.Lock()
+
 		for key, _ := range mMemoryCache {
 			if strings.Contains(key, _key) {
 				delete(mMemoryCache, key)
@@ -164,6 +166,38 @@ func DelCacheContains(_key string) {
 		}
 
 	}
+}
+
+// 分布式锁
+func SetNX(_key string, _expire uint32) bool {
+
+	if clGlobal.SkyConf.IsCluster {
+		redis := clGlobal.GetRedis()
+		if redis != nil {
+			return redis.SetNx(_key, "1", _expire)
+		}
+	} else {
+
+		mLocker.Lock()
+		defer mLocker.Lock()
+		val, isOK := mMemoryCache[_key]
+		if !isOK {
+			mMemoryCache[_key] = clCache{
+				Data:   "1",
+				Expire: clTime.GetNowTime(),
+			}
+			return true
+		}
+		if val.Expire+_expire < clTime.GetNowTime() {
+			mMemoryCache[_key] = clCache{
+				Data:   "1",
+				Expire: clTime.GetNowTime(),
+			}
+			return true
+		}
+		return false
+	}
+	return true
 }
 
 // 移除接口缓存
