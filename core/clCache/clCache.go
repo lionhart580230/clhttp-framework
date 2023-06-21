@@ -132,7 +132,7 @@ func GetCache(_key string) string {
 // 删除缓存
 func DelCache(_key string) {
 	mLocker.Lock()
-	defer mLocker.Lock()
+	defer mLocker.Unlock()
 
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
@@ -157,7 +157,7 @@ func DelCacheContains(_key string) {
 	} else {
 
 		mLocker.Lock()
-		defer mLocker.Lock()
+		defer mLocker.Unlock()
 
 		for key, _ := range mMemoryCache {
 			if strings.Contains(key, _key) {
@@ -179,7 +179,7 @@ func SetNX(_key string, _expire uint32) bool {
 	} else {
 
 		mLocker.Lock()
-		defer mLocker.Lock()
+		defer mLocker.Unlock()
 		val, isOK := mMemoryCache[_key]
 		if !isOK {
 			mMemoryCache[_key] = clCache{
