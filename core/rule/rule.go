@@ -277,6 +277,21 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		if cacheStr != "" {
 			return cacheStr, ruleinfo.RespContent
 		}
+	} else if ruleinfo.CacheExpire < 0 {
+		// 根据用户缓存
+		if ruleinfo.CacheType == 2 {
+			paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
+		} else if ruleinfo.CacheType == 1 {
+			// 根据IP缓存
+			paramsKeys = append(paramsKeys, "ip="+_server.RemoteIP)
+		}
+		cacheKey = _uri + "_" + acName + "_" + BuildCacheKey(paramsKeys) + "_NX"
+		if _server.Encrypt { // 如果是加密的话，需要带上Iv
+			cacheKey += _server.Iv
+		}
+		if !clCache.SetNX(cacheKey, uint32(-ruleinfo.CacheExpire)) {
+			return clResponse.Failed(2000, "您操作的太频繁了!", nil), "text/json"
+		}
 	}
 
 	// 调用前置函数，并返回结果
