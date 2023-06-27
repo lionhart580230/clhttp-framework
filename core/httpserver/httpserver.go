@@ -7,14 +7,13 @@ import (
 	"github.com/lionhart580230/clUtil/clLog"
 	"github.com/lionhart580230/clhttp-framework/clCommon"
 	"github.com/lionhart580230/clhttp-framework/core/rule"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 )
 
-var TempDirPath string
+//var TempDirPath string
 
 // 是否启用上传测试页面
 var mEnableUploadTest = false
@@ -55,8 +54,8 @@ func StartServer(_listenPort uint32) {
 		http.HandleFunc("/uploadFile", uploadFile)
 	}
 
-	tempDirPath, _ := ioutil.TempDir("__clhttp_tempfile__", "")
-	TempDirPath = tempDirPath
+	//tempDirPath, _ := os.CreateTemp("__clhttp_tempfile__", "")
+	//TempDirPath = tempDirPath.Name()
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", _listenPort), nil))
 }
 

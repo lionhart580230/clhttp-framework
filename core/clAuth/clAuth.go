@@ -72,29 +72,6 @@ func AddUser(_auth *AuthInfo) {
 	mAuthMap[_auth.Uid] = _auth
 }
 
-// 加载所有用户数据
-func LoadUsers() {
-	//mLocker.Lock()
-	//defer mLocker.Unlock()
-	//
-	//mAuthMap = make(map[uint64] *AuthInfo)
-	//
-	//redis := clGlobal.GetRedis()
-	//
-	//keys := redis.GetKeys(prefix + "*")
-	//for _, ukey := range keys {
-	//	var data AuthInfo
-	//	var jsonStr = clCrypt.Base64Decode(redis.Get(ukey))
-	//	var err = json.Unmarshal(jsonStr, &data)
-	//	if err != nil {
-	//		clLog.Error("加载: %v 用户数据失败! 错误: %v -> %v", err, string(jsonStr))
-	//		continue
-	//	}
-	//	//clLog.Error("成功加载用户: %v -> %v", data.Token, data.Uid)
-	//	mAuthMap[ data.Uid ] = &data
-	//}
-}
-
 // 保存用户信息到数据库
 func SaveUser(_auth *AuthInfo) {
 	if _auth.Uid == 0 {
@@ -172,12 +149,15 @@ func GetUser(_uid uint64) *AuthInfo {
 // 如果设置为登录中状态则 uid必须>0
 // 如果没有则自动切换为离线状态
 func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
+	if this == nil && _uid > 0 && _token != "" {
+		this = NewUser(_uid, _token)
+	}
 	if _uid > 0 && _token != "" {
 		this.IsLogin = true
 		this.Uid = _uid
 		this.Token = _token
 		AddUser(this)
-	} else {
+	} else if this != nil {
 		DelUser(this)
 	}
 }
