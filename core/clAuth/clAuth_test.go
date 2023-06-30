@@ -1,20 +1,15 @@
 package clAuth
 
 import (
-	"fmt"
 	"github.com/lionhart580230/clUtil/clJson"
-	"reflect"
+	"github.com/lionhart580230/clUtil/clLog"
 	"testing"
 )
 
-type TestObj struct {
-	a string
-	b string
-}
-
 func TestGetUser(t *testing.T) {
-	_val := clJson.A{"a", "sss"}
-	_type := reflect.TypeOf(_val)
-
-	fmt.Printf("%+v 类型: %v\n", _val, _type.Align())
+	var auth *AuthInfo
+	auth.SetLogin(1, "123123").SetItems(clJson.M{
+		"aaa": 111,
+	})
+	clLog.Info("item: %v", auth.GetUint32("aaa"))
 }
