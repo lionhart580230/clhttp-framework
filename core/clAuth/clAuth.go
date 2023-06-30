@@ -148,7 +148,7 @@ func GetUser(_uid uint64) *AuthInfo {
 // 设置登录
 // 如果设置为登录中状态则 uid必须>0
 // 如果没有则自动切换为离线状态
-func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
+func (this *AuthInfo) SetLogin(_uid uint64, _token string) *AuthInfo {
 	if this == nil && _uid > 0 && _token != "" {
 		this = NewUser(_uid, _token)
 	}
@@ -160,12 +160,16 @@ func (this *AuthInfo) SetLogin(_uid uint64, _token string) {
 	} else if this != nil {
 		DelUser(this)
 	}
+	return this
 }
 
 // 设置登录
 // 如果设置为登录中状态则 uid必须>0
 // 如果没有则自动切换为离线状态
 func (this *AuthInfo) SetLoginEx(_uid uint64, _token, _sessionKey string) {
+	if this == nil && _uid > 0 && _token != "" {
+		this = NewUser(_uid, _token)
+	}
 	if _uid > 0 && _token != "" {
 		this.IsLogin = true
 		this.Uid = _uid

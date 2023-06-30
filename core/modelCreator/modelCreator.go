@@ -16,7 +16,6 @@ const modelTemplatePackage = `package %v
 import (
 	"errors"
 	"github.com/lionhart580230/clUtil/clLog"
-	"github.com/lionhart580230/clUtil/clReflect"
 	"github.com/lionhart580230/clhttp-framework/clGlobal"
 )
 `
@@ -161,5 +160,5 @@ func (this *Model)Set%v(_val %v) *Model {
 
 	clFile.AppendFile(_path+"/"+modelName+"/"+modelName+".go", fileContent.String())
 
-	fmt.Printf(">> 模型文件生成完毕!!\n\n%v\n", fileContent.String())
+	fmt.Printf(">> 模型文件: %v 生成完毕!!\n", _path+"/"+modelName+"/"+modelName+".go")
 }
