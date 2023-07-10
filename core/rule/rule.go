@@ -230,6 +230,21 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		return respStr, "text/json"
 	}
 
+	// 需要登录
+	if ruleinfo.Login {
+		respStr, uInfo := DoAuthCheck(rq, acName, _server, _param, uid, token, sessionKey)
+		if uInfo == nil {
+			respStr = clResponse.NotLogin()
+		}
+		if respStr != "" {
+			if _server.Encrypt {
+				respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
+			}
+			return respStr, ruleinfo.RespContent
+		}
+		authInfo = uInfo
+	}
+
 	// 检查是否需要缓存
 	var cacheKey = ""
 	if ruleinfo.CacheExpire > 0 {
@@ -251,7 +266,9 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	} else if ruleinfo.CacheExpire < 0 {
 		// 根据用户缓存
 		if ruleinfo.CacheType == 2 {
-			paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
+			if authInfo != nil {
+				paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
+			}
 		} else if ruleinfo.CacheType == 1 {
 			// 根据IP缓存
 			paramsKeys = append(paramsKeys, "ip="+_server.RemoteIP)
@@ -263,21 +280,6 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		if !clCache.SetNX(cacheKey, uint32(-ruleinfo.CacheExpire)) {
 			return clResponse.Failed(2000, "您操作的太频繁了!", nil), "text/json"
 		}
-	}
-
-	// 需要登录
-	if ruleinfo.Login {
-		respStr, uInfo := DoAuthCheck(rq, acName, _server, _param, uid, token, sessionKey)
-		if uInfo == nil {
-			respStr = clResponse.NotLogin()
-		}
-		if respStr != "" {
-			if _server.Encrypt {
-				respStr = clCrypt.AesCBCEncode(respStr, _server.AesKey, _server.Iv)
-			}
-			return respStr, ruleinfo.RespContent
-		}
-		authInfo = uInfo
 	}
 
 	// 调用前置函数，并返回结果
