@@ -53,3 +53,13 @@ rule.AddRule(rule.Rule{
 	posArr := _param.GetFloatSplit("pos_list")
 ```
 这只是一个简单的语法糖，有了它就不用自己获取，手动分割，再手动转化了
+
+### 可用配置列表
+```yaml
+environments:
+  - MYSQL_MAX_CONNECTIONS=30  // MYSQL的最大连接数
+  - MYSQL_IDLE_CONNECTIONS=10 // MYSQL最大空闲连接数
+  - MYSQL_MAX_LIFE_SEC=12400  // MYSQL连线最大存活时间（秒）
+  - MYSQL_COUNT=1       // 数据库连线数量（必须跟配置统一）
+  - MYSQL_CONNECTIONS=  // 数据库配置加密文本
+```

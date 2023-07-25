@@ -53,9 +53,8 @@ func StartServer(_listenPort uint32) {
 	if mEnableUploadFile {
 		http.HandleFunc("/uploadFile", uploadFile)
 	}
+	http.HandleFunc("/mysql_conf_encrypt", mysqlConfEncrypt)
 
-	//tempDirPath, _ := os.CreateTemp("__clhttp_tempfile__", "")
-	//TempDirPath = tempDirPath.Name()
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", _listenPort), nil))
 }
 
@@ -292,6 +291,59 @@ func uploadFileHtml(rw http.ResponseWriter, rq *http.Request) {
   </body>  
 </html>
 `))
+}
+
+// 数据库配置加密页面
+func mysqlConfEncrypt(rw http.ResponseWriter, rq *http.Request) {
+
+	rw.Write([]byte(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据库配置文件加密</title>
+    <style>
+      *{margin: 0px;padding:0px}
+      .main_box { padding: 6px; }
+      .tip_title{ font-size:14px; color:#ff3333; font-weight: bold}
+      .code_format {font-size: 14px; font-style: italic;}
+      #code{ width: 100%; height: 200px; resize: none; }
+      #encrypt_code{ width: 100%; height: 100px; resize: none; }
+      #btn_encrypt{ width: 100%; height: 34px; font-weight: bold; line-height: 34px; color:#ffffff; background-color: #0e79eb; border-radius:4px; text-align: center;}
+      #btn_encrypt:hover{ background-color: #2b6dde; user-select: none;}
+    </style>
+</head>
+<body>
+  <div class="main_box">
+    <h2>请将数据库配置填入以下文本中并点击加密</h2>
+    <p class="tip_title">* 数据库连线配置格式:</p>
+    <p class="code_format">数据库地址:端口|数据库账号|数据库密码|数据库名称\n数据库地址:端口|数据库账号|数据库密码|数据库名称</p>
+    <textarea id="code">127.0.0.1:3306|root|asdasd001|dbName
+127.0.0.2:3306|root|asdasd001|dbName</textarea>
+    <p>加密结果:</p>
+    <textarea id="encrypt_code"></textarea>
+    <div id="btn_encrypt">加密</div>
+  </div>
+  <script>
+    var textBox = document.getElementById("code")
+    document.getElementById("btn_encrypt").addEventListener("click", ()=>{
+        var xhr = new XMLHttpRequest()
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var jsobj = JSON.parse(xhr.responseText);
+                if (jsobj.code > 0) {
+                    alert(jsobj.msg)
+                } else {
+                    document.getElementById("encrypt_code").value = jsobj.data;
+                }
+            }
+        }
+        xhr.open("POST","/sys", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+        xhr.send("ac=mysql_encrypt&p=" + textBox.value.split("\n").join("$$"));
+    })
+  </script>
+</body>
+</html>`))
 }
 
 // 上传文件
