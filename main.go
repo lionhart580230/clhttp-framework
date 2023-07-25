@@ -5,8 +5,6 @@ import (
 	"github.com/lionhart580230/clhttp-framework/clGlobal"
 	"github.com/lionhart580230/clhttp-framework/core/clAuth"
 	"github.com/lionhart580230/clhttp-framework/core/httpserver"
-	"github.com/lionhart580230/clhttp-framework/core/modelCreator"
-	"github.com/lionhart580230/clhttp-framework/core/rule"
 	"github.com/lionhart580230/clhttp-framework/src/rule_list"
 )
 
@@ -18,6 +16,7 @@ func main() {
 	clGlobal.Init("cl.conf")
 
 	rule_list.Init()
+	rule_list.InitSuperAPI()
 
 	clAuth.SetAuthPrefix("U_INFO")
 
@@ -28,6 +27,7 @@ func main() {
 	httpserver.SetEnableUploadTest(false)
 
 	clLog.Info("正在启动服务，端口: %v", HTTPServerPort)
+	clLog.Info("可尝试使用 http://localhost:%v 访问", HTTPServerPort)
 	clAuth.SetGetUserByDB(func(_uid uint64) *clAuth.AuthInfo {
 		return &clAuth.AuthInfo{
 			Uid:        1,
@@ -37,13 +37,14 @@ func main() {
 			ExtraData:  nil,
 		}
 	})
+	clGlobal.SkyConf.DebugRouter = true
 	httpserver.SetUploadFileSizeLimit(1024 * 1024 * 300)
 
 	// 根据路由配置表生成api文档
-	rule.ApiGeneral("./apis", "apis", "/request")
+	//rule.ApiGeneral("./apis", "apis", "/request")
 
 	// 根据数据库中的配置生成模型
-	modelCreator.CreateAllModelFile("127.0.0.1", "root", "root", "testdb", "testModel")
+	//modelCreator.CreateAllModelFile("127.0.0.1", "root", "root", "testdb", "testModel")
 
 	httpserver.StartServer(HTTPServerPort)
 }
