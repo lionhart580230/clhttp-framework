@@ -3,6 +3,7 @@ package rule_list
 import (
 	"github.com/lionhart580230/clhttp-framework/clController/example"
 	"github.com/lionhart580230/clhttp-framework/core/rule"
+	"github.com/lionhart580230/clhttp-framework/core/rule/apis"
 )
 
 func Init() {
@@ -35,5 +36,22 @@ func Init() {
 			rule.NewParam("localPath", rule.PTYPE_ALL, true, ""),
 		},
 		CallBack: example.ApiUploadExample,
+	})
+
+}
+
+func InitSuperAPI() {
+
+	// 添加请求类型
+	rule.AddRequest("sys", "ac")
+
+	rule.AddRule(rule.Rule{
+		Request: "sys",
+		Name:    "mysql_encrypt",
+		Params: []rule.ParamInfo{
+			rule.NewParam("p", rule.PTYPE_ALL, true, ""),
+		},
+		CallBack: apis.ApiMysqlEncrypt,
+		Login:    false,
 	})
 }

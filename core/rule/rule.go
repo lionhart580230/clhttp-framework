@@ -137,7 +137,6 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	defer ruleLocker.RUnlock()
 
 	var acKey = GetRequestAcKey(_uri)
-
 	// 通过AC获取到指定的路由
 	acName := _param.GetStr(acKey, "")
 	ruleinfo, exists := ruleList[_uri+"_"+acName]
