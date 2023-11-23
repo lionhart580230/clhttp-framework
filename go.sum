@@ -49,6 +49,8 @@ github.com/lionhart580230/clUtil v1.2.14 h1:Cwv2ntn+um/sx2h7MsS+6l0wvFu7SQd8xmhQ
 github.com/lionhart580230/clUtil v1.2.14/go.mod h1:t4PUj0YrI6u1RClbo2KGx4jZODVOSgx+SU389FNCErY=
 github.com/lionhart580230/clUtil v1.2.15 h1:r9u37FlDMvzFz9E0SXHJWWYqnueP73CpXil8lghKMCs=
 github.com/lionhart580230/clUtil v1.2.15/go.mod h1:t4PUj0YrI6u1RClbo2KGx4jZODVOSgx+SU389FNCErY=
+github.com/lionhart580230/clUtil v1.2.17 h1:32TJC6EMB1LI6hXQpnKPyJJLvG/N0xEnJRTBc5/ED1A=
+github.com/lionhart580230/clUtil v1.2.17/go.mod h1:t4PUj0YrI6u1RClbo2KGx4jZODVOSgx+SU389FNCErY=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/nxadm/tail v1.4.8 h1:nPr65rt6Y5JFSKQO7qToXr7pePgD6Gwiw05lkbyAQTE=
 github.com/nxadm/tail v1.4.8/go.mod h1:+ncqLTQzXmGhMZNUePPaPqPvBxHAIsmXswZKocGu+AU=
