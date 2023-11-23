@@ -129,7 +129,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 			jsonStr = []byte(clCrypt.AesCBCDecode(jsonStr, []byte(mAesKey), []byte(iv)))
 		}
 		if jsonStr == nil || len(jsonStr) == 0 {
-			clLog.Error("数据: %v 结构化失败! 加密:%v 长度:%v", string(jsonStr), isEncrypt, n)
+			clLog.Error("数据: %v 结构化失败! 加密:%v 长度:%v", string(jsonBytes[:n]), isEncrypt, n)
 			rw.WriteHeader(502)
 			return
 		}
