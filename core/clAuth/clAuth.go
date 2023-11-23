@@ -53,8 +53,8 @@ func NewUser(_uid uint64, _token string) *AuthInfo {
 }
 
 // 获取用户缓存Key
-func GetUserKey(_uid uint64) string {
-	return fmt.Sprintf("%v%v", prefix, _uid)
+func GetUserKey(_prefix string, _uid uint64) string {
+	return fmt.Sprintf("%v%v", _prefix, _uid)
 }
 
 // 添加用户
@@ -89,7 +89,22 @@ func SaveUser(_auth *AuthInfo) {
 			clLog.Error("序列化用户缓存错误: %v", err)
 			return
 		}
-		redis.SetEx(GetUserKey(_auth.Uid), clCrypt.Base64Encode(userData), 12*3600)
+		redis.SetEx(GetUserKey(prefix, _auth.Uid), clCrypt.Base64Encode(userData), 12*3600)
+	}
+}
+
+// 删除使用相同redis的其他服务的用户数据
+func DelUserRemote(_globalPrefix string, _uInfoPrefix string, _uid uint64) {
+	mLocker.Lock()
+	defer mLocker.Unlock()
+
+	if clGlobal.SkyConf.IsCluster {
+		redis := clGlobal.GetRedis()
+		if redis != nil {
+			var delUserKey = _globalPrefix + "_" + GetUserKey(_uInfoPrefix, _uid)
+			redis.DelNoPrefix(delUserKey)
+		}
+		return
 	}
 }
 
@@ -101,7 +116,7 @@ func DelUser(_auth *AuthInfo) {
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			redis.Del(GetUserKey(_auth.Uid))
+			redis.Del(GetUserKey(prefix, _auth.Uid))
 		}
 		return
 	}
@@ -117,7 +132,7 @@ func GetUser(_uid uint64) *AuthInfo {
 	if clGlobal.SkyConf.IsCluster {
 		redis := clGlobal.GetRedis()
 		if redis != nil {
-			var userKey = GetUserKey(_uid)
+			var userKey = GetUserKey(prefix, _uid)
 			var userCache = redis.Get(userKey)
 			if userCache != "" {
 				err := json.Unmarshal(clCrypt.Base64Decode(userCache), userObj)

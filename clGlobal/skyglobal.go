@@ -82,9 +82,7 @@ func Init(_filename string) {
 	//if SkyConf.MysqlCount > 0 {
 	if mysqlEncryptStr != "" {
 		SkyConf.MysqlList = make([]MysqlConf, 0)
-		clLog.Debug("获取到mysql_connection_str: %v", mysqlEncryptStr)
 		mysqlConnDecode := DecryptMysql(mysqlEncryptStr)
-		clLog.Debug("解密后: %v", mysqlConnDecode)
 		mysqlConnItems := strings.Split(mysqlConnDecode, "$$")
 		mMysqlList = make([]*clMysql.DBPointer, len(mysqlConnItems))
 		for _, mysqlConnItem := range mysqlConnItems {
