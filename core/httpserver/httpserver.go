@@ -92,7 +92,10 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		return
 	}
 	requestName := requestArr[1]
-
+	actionName := ""
+	if len(requestArr) > 2 {
+		actionName = requestArr[2]
+	}
 	// 过滤请求
 	for _, filterExt := range filter_file_ext {
 		if strings.HasSuffix(requestArr[1], filterExt) {
@@ -255,6 +258,8 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		Encrypt:     isEncrypt, // 是否加密
 		AesKey:      mAesKey,
 		Iv:          iv,
+		JWT:         rq.Header.Get("JWT"),
+		AcName:      actionName,
 	}
 	content, contentType := CallHandler(rq, &rw, requestName, rqObj, &serObj)
 	if contentType == "" {
