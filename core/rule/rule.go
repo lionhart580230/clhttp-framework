@@ -36,6 +36,8 @@ type ServerParam struct {
 	Encrypt     bool       // 是否需要加密
 	AesKey      string     // 加密用的key
 	Iv          string     // 加密用的iv
+	JWT         string     // JWT密文
+	AcName      string     // 路由名称
 }
 
 //@author xiaolan
@@ -136,9 +138,14 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	ruleLocker.RLock()
 	defer ruleLocker.RUnlock()
 
-	var acKey = GetRequestAcKey(_uri)
 	// 通过AC获取到指定的路由
-	acName := _param.GetStr(acKey, "")
+	acName := ""
+	if _server.AcName != "" {
+		acName = _server.AcName
+	} else {
+		var acKey = GetRequestAcKey(_uri)
+		acName = _param.GetStr(acKey, "")
+	}
 	ruleinfo, exists := ruleList[_uri+"_"+acName]
 	if !exists {
 		if clGlobal.SkyConf.DebugRouter {
@@ -168,9 +175,6 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	newParam := NewHttpParam(nil)
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
-			if pinfo.Name == acKey {
-				continue
-			}
 			value := _param.GetStr(pinfo.Name, "")
 			if value == PARAM_CHECK_FAIED || value == "" {
 				if pinfo.Static {

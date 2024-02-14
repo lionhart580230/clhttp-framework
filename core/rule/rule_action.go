@@ -166,6 +166,10 @@ func DoAuthCheck(_rq *http.Request, _ac string, _serverParam *ServerParam, _para
 		return resp.ResponseText, resp.UserInfo
 	}
 
+	if _serverParam.JWT != "" {
+		return CheckByJWT(_serverParam.JWT)
+	}
+
 	var authInfo *clAuth.AuthInfo
 	if _uid > 0 && _token != "" {
 		authInfo = clAuth.GetUser(_uid)
@@ -192,4 +196,10 @@ func DoAuthCheck(_rq *http.Request, _ac string, _serverParam *ServerParam, _para
 
 	}
 	return respStr, authInfo
+}
+
+// 通过JWT进行登录验证
+func CheckByJWT(_jwtStr string) (string, *clAuth.AuthInfo) {
+	authInfo := clAuth.CreateAuthByJWT(_jwtStr)
+	return "", authInfo
 }
