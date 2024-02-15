@@ -8,8 +8,8 @@ import (
 	"sync"
 )
 
-var jwtKey string
-var jwtIv string
+var jwtKey string = "003804fc018ad3c4bb4c76d99920b796"
+var jwtIv string = "003804fc018ad3c4bb4c76d99920b796"
 
 type JwtAuthResp struct {
 	Uid        uint64 `json:"u"`
@@ -51,8 +51,9 @@ func CreateAuthByJWT(_jwtStr string) *AuthInfo {
 
 // 创建JWT
 func CreateJWT(_uid uint64, _expire uint32) string {
-	return clJson.CreateBy(JwtAuthResp{
+	dataStr := clJson.CreateBy(JwtAuthResp{
 		Uid:        _uid,
 		ExpireTime: clTime.GetNowTime() + _expire,
 	}).ToStr()
+	return clCrypt.AesCBCEncode(dataStr, jwtKey, jwtIv)
 }
