@@ -258,7 +258,7 @@ func rootHandler(rw http.ResponseWriter, rq *http.Request) {
 		Encrypt:     isEncrypt, // 是否加密
 		AesKey:      mAesKey,
 		Iv:          iv,
-		JWT:         rq.Header.Get("JWT"),
+		JWT:         rq.Header.Get("Jwt"),
 		AcName:      actionName,
 	}
 	content, contentType := CallHandler(rq, &rw, requestName, rqObj, &serObj)
