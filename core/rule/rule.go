@@ -252,7 +252,7 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 	var cacheKey = ""
 	if ruleinfo.CacheExpire > 0 {
 		// 根据用户缓存
-		if ruleinfo.CacheType == 2 {
+		if ruleinfo.CacheType == 2 && authInfo != nil {
 			paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
 		} else if ruleinfo.CacheType == 1 {
 			// 根据IP缓存
@@ -268,7 +268,7 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 		}
 	} else if ruleinfo.CacheExpire < 0 {
 		// 根据用户缓存
-		if ruleinfo.CacheType == 2 {
+		if ruleinfo.CacheType == 2 && authInfo != nil {
 			if authInfo != nil {
 				paramsKeys = append(paramsKeys, fmt.Sprintf("uid=%v", authInfo.Uid))
 			}
