@@ -107,13 +107,14 @@ func BuildCacheKey(_params []string) string {
 
 // 删除Api缓存
 func DelApiCache(_uri string, _acName string, _uid uint64, _params map[string]string) {
-	
+
 	ruleinfo, exists := ruleList[_uri+"_"+_acName]
 	if !exists {
 		clLog.Error("删除缓存失败! AC <%v_%v> 不存在!", _uri, _acName)
 		return
 	}
 	paramsKeys := make([]string, 0)
+	paramsKeys = append(paramsKeys, _uri+"_"+_acName)
 
 	if ruleinfo.Params != nil {
 		for _, pinfo := range ruleinfo.Params {
