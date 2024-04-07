@@ -3,6 +3,7 @@ package rule
 import (
 	"fmt"
 	"github.com/lionhart580230/clUtil/clCrypt"
+	"github.com/lionhart580230/clUtil/clJson"
 	"github.com/lionhart580230/clUtil/clLog"
 	"github.com/lionhart580230/clhttp-framework/clCommon"
 	"github.com/lionhart580230/clhttp-framework/clGlobal"
@@ -328,7 +329,10 @@ func CallRule(rq *http.Request, rw *http.ResponseWriter, _uri string, _param *Ht
 
 	// 检查是否需要缓存
 	if ruleinfo.CacheExpire > 0 {
-		clCache.UpdateCacheSimple(cacheKey, respStr, uint32(ruleinfo.CacheExpire))
+		jsObj := clJson.New([]byte(respStr))
+		if jsObj == nil || (jsObj != nil && jsObj.GetUint32("code") == 0) {
+			clCache.UpdateCacheSimple(cacheKey, respStr, uint32(ruleinfo.CacheExpire))
+		}
 	}
 
 	if clGlobal.SkyConf.DebugRouter {
