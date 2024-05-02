@@ -2,7 +2,9 @@ package rule
 
 import (
 	"github.com/lionhart580230/clUtil/clJson"
+	"github.com/lionhart580230/clUtil/clTime"
 	"github.com/lionhart580230/clhttp-framework/clCommon"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -228,6 +230,51 @@ func (this *HttpParam) GetFloatSplit(_key string) []float64 {
 	}
 
 	return float64Arr
+}
+
+// 获取开始时间
+// @comment 通过日期时间拼接上后面的00:00:00获取时间
+func (this *HttpParam) GetBeginTime(_key string) uint32 {
+	val, exists := this.values[_key]
+	if !exists {
+		return 0
+	}
+
+	if match, err := regexp.Match(`^\d{4}\-\d{2}\-\d{2}$`, []byte(val)); err != nil || !match {
+		return 0
+	}
+
+	return clTime.GetTimeStamp2(val+" 00:00:00", "2006-01-02 15:04:05")
+}
+
+// 获取结束时间
+// @comment 通过日期时间拼接上后面的23:59:59获取时间
+func (this *HttpParam) GetEndTime(_key string) uint32 {
+	val, exists := this.values[_key]
+	if !exists {
+		return 0
+	}
+
+	if match, err := regexp.Match(`^\d{4}\-\d{2}\-\d{2}$`, []byte(val)); err != nil || !match {
+		return 0
+	}
+
+	return clTime.GetTimeStamp2(val+" 23:59:59", "2006-01-02 15:04:05")
+}
+
+// 获取结束时间
+// @comment 通过日期时间拼接上后面的23:59:59获取时间
+func (this *HttpParam) GetTimeStamp(_key string) uint32 {
+	val, exists := this.values[_key]
+	if !exists {
+		return 0
+	}
+
+	if match, err := regexp.Match(`^\d{4}\-\d{2}\-\d{2}\s\d{2}\:\d{2}\:\d{2}$`, []byte(val)); err != nil || !match {
+		return 0
+	}
+
+	return clTime.GetTimeStamp2(val, "2006-01-02 15:04:05")
 }
 
 // @author xiaolan

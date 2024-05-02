@@ -36,6 +36,8 @@ const (
 	PTYPE_V2          = 22 // 2维坐标系
 	PTYPE_V3          = 23 // 3维坐标系
 	PTYPE_V4          = 24 // 4维坐标系
+	PTYPE_REGEX       = 25 // 正则表达式
+	PTYPE_STR_IN      = 26 // 正则表达式
 )
 
 const (
@@ -305,7 +307,7 @@ func init() {
 		return _param
 	}
 
-	// 长度范围内的字符串
+	// 四维坐标系
 	paramCheckers[PTYPE_V4] = func(_param string, _extra *ParamInfo) string {
 
 		params := strings.Split(_param, ",")
@@ -321,6 +323,36 @@ func init() {
 		}
 
 		return _param
+	}
+
+	// 指定正则
+	paramCheckers[PTYPE_REGEX] = func(_param string, _extra *ParamInfo) string {
+		match, err := regexp.Match(_extra.Extra[0], []byte(_param))
+		if err != nil || !match {
+			return PARAM_CHECK_FAIED
+		}
+		return _param
+	}
+
+	// 指定字符串区间, 多个字符串用逗号分割
+	paramCheckers[PTYPE_STR_IN] = func(_param string, _extra *ParamInfo) string {
+		checkStrList := strings.Split(_extra.Extra[0], "&$&")
+		caseMatch := _extra.Extra[1] == "true"
+		for _, str := range checkStrList {
+			if !caseMatch {
+				// 大小写不敏感
+				if strings.ToUpper(str) == strings.ToUpper(_param) {
+					return _param
+				}
+			} else {
+				// 大小写敏感
+				if str == _param {
+					return _param
+				}
+			}
+		}
+		// 没有匹配成功
+		return PARAM_CHECK_FAIED
 	}
 
 }
