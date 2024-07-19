@@ -6,6 +6,7 @@ import (
 	"github.com/lionhart580230/clUtil/clLog"
 	"github.com/lionhart580230/clUtil/clMysql"
 	"github.com/lionhart580230/clUtil/clRedis"
+	"github.com/lionhart580230/clhttp-framework/core/clAuth"
 	"github.com/lionhart580230/clhttp-framework/core/skyconfig"
 	"strings"
 )
@@ -36,6 +37,9 @@ type SkyConfig struct {
 	MysqlMaxConnections  uint32 // 数据库最大连接数
 	MysqlIdleConnections uint32 // 数据库最小连接数
 	MysqlIdleLifeTime    uint32 // 空闲连接的存活时间
+
+	JWTEncryptKey string
+	JWTEncryptIV  string
 
 	RedisHost   string
 	RedisPrefix string
@@ -73,13 +77,17 @@ func Init(_filename string) {
 	conf.GetStr("system", "version", "", &ServerVersion)
 	conf.GetBool("system", "is_cluster", false, &SkyConf.IsCluster)
 	conf.GetBool("system", "debug_router", false, &SkyConf.DebugRouter)
+	conf.GetStr("jwt", "key", "", &SkyConf.JWTEncryptKey)
+	conf.GetStr("jwt", "iv", "", &SkyConf.JWTEncryptIV)
+
+	if SkyConf.JWTEncryptKey != "" && SkyConf.JWTEncryptIV != "" {
+		clAuth.SetJWTCert(SkyConf.JWTEncryptKey, SkyConf.JWTEncryptIV)
+	}
 
 	var mysqlEncryptStr string
 	conf.GetStr("mysql", "connection_str", "", &mysqlEncryptStr)
 
 	// 新版数据库连线
-	//conf.GetUint32("mysql", "count", 0, &SkyConf.MysqlCount)
-	//if SkyConf.MysqlCount > 0 {
 	if mysqlEncryptStr != "" {
 		SkyConf.MysqlList = make([]MysqlConf, 0)
 		mysqlConnDecode := DecryptMysql(mysqlEncryptStr)
