@@ -12,8 +12,9 @@ var jwtKey string = "003804fc018ad3c4bb4c76d99920b796"
 var jwtIv string = "003804fc018ad3c4bb4c76d99920b796"
 
 type JwtAuthResp struct {
-	Uid        uint64 `json:"u"`
-	ExpireTime uint32 `json:"e"`
+	Uid        uint64            `json:"u"`
+	ExpireTime uint32            `json:"e"`
+	Data       map[string]string `json:"d"`
 }
 
 // 设置JWT的验证key和iv
@@ -43,16 +44,17 @@ func CreateAuthByJWT(_jwtStr string) *AuthInfo {
 		Token:      "",
 		LastUptime: data.ExpireTime,
 		IsLogin:    true,
-		ExtraData:  nil,
+		ExtraData:  data.Data,
 		SessionKey: "",
 		mLocker:    sync.RWMutex{},
 	}
 }
 
 // 创建JWT
-func CreateJWT(_uid uint64, _expire uint32) string {
+func CreateJWT(_uid uint64, _expire uint32, _data map[string]string) string {
 	dataStr := clJson.CreateBy(JwtAuthResp{
 		Uid:        _uid,
+		Data:       _data,
 		ExpireTime: clTime.GetNowTime() + _expire,
 	}).ToStr()
 	return clCrypt.AesCBCEncode(dataStr, jwtKey, jwtIv)
